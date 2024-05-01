@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
+const dree = require('dree');
 
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
@@ -11,18 +12,13 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(disposable);
   const projectsDataProvider = new ProjectsDataProvider("/");
-  vscode.window.registerTreeDataProvider(
-    "projectsBrowser",
-    projectsDataProvider
-  );
+  vscode.window.registerTreeDataProvider("projectsBrowser", projectsDataProvider);
 }
 
 // This method is called when your extension is deactivated
 export function deactivate() {}
 
-export class ProjectsDataProvider
-  implements vscode.TreeDataProvider<Repository>
-{
+export class ProjectsDataProvider implements vscode.TreeDataProvider<Repository> {
   constructor(private projectsRoots: string) {
     this.projectsRoots = projectsRoots;
   }
@@ -33,32 +29,34 @@ export class ProjectsDataProvider
 
   getChildren(element?: Repository): Thenable<Repository[]> {
     if (element) {
-      console.log(element);
-      return Promise.resolve([]);
+      var folderList = this.getDirectoryFolders(element.location);
+      return Promise.resolve(folderList);
     } else {
       console.log(this.projectsRoots);
       if (fs.existsSync(this.projectsRoots)) {
-        var folderList: Repository[] = [];
-        fs.readdirSync(this.projectsRoots, {
-          recursive: false,
-          withFileTypes: true,
-        })
-          .filter((dirent) => dirent.isDirectory())
-          .map((dirent) =>
-            folderList.push(
-              new Repository(
-                dirent.name,
-                dirent.path,
-                vscode.TreeItemCollapsibleState.None
-              )
-            )
-          );
+        var folderList = this.getDirectoryFolders(this.projectsRoots);
         return Promise.resolve(folderList);
       } else {
-        console.log(this.projectsRoots);
         return Promise.resolve([]);
       }
     }
+  }
+
+  getDirectoryFolders(baseFolder: string): Repository[] {
+    var folderList: Repository[] = [];
+    const options = {
+      depth: 1
+    };
+    var tree = dree.scan('.', options);
+    fs.readdirSync(baseFolder, {
+      recursive: false,
+      withFileTypes: true,
+    })
+      .filter((dirent) => dirent.isDirectory())
+      .map((dirent) =>
+        folderList.push(new Repository(dirent.name, path.join(dirent.path, dirent.name), vscode.TreeItemCollapsibleState.Collapsed))
+      );
+    return folderList;
   }
 }
 
@@ -66,7 +64,7 @@ class Repository extends vscode.TreeItem {
   private isFolder: boolean = true;
   constructor(
     public readonly label: string,
-    private location: string,
+    public location: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState
   ) {
     super(label, collapsibleState);
