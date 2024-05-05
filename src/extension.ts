@@ -1,11 +1,13 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
-const dree = require('dree');
+import dirTree from "directory-tree";
+import { DirectoryTree, DirectoryTreeOptions, DirectoryTreeCallback } from 'directory-tree';
+
 
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
-  console.log('Congratulations, your extension "test" is now active!');
+  console.log('Extension project-browser active');
   let disposable = vscode.commands.registerCommand("test.helloWorld", () => {
     vscode.window.showInformationMessage("Hello World from test!");
   });
@@ -34,6 +36,7 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<Repository>
     } else {
       console.log(this.projectsRoots);
       if (fs.existsSync(this.projectsRoots)) {
+        //const filteredTree = dirTree("/", { extensions: /.*/, depth: 2 });
         var folderList = this.getDirectoryFolders(this.projectsRoots);
         return Promise.resolve(folderList);
       } else {
@@ -47,14 +50,13 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<Repository>
     const options = {
       depth: 1
     };
-    var tree = dree.scan('.', options);
     fs.readdirSync(baseFolder, {
       recursive: false,
       withFileTypes: true,
     })
       .filter((dirent) => dirent.isDirectory())
       .map((dirent) =>
-        folderList.push(new Repository(dirent.name, path.join(dirent.path, dirent.name), vscode.TreeItemCollapsibleState.Collapsed))
+        folderList.push(new Repository(dirent.name, path.join(dirent.path, dirent.name), vscode.TreeItemCollapsibleState.Expanded))
       );
     return folderList;
   }

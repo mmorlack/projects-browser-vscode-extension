@@ -9,7 +9,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:projectsBrowser"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -56,6 +58,6 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "dree": "^4.7.0"
+    "directory-tree": "^3.5.1"
   }
 }
