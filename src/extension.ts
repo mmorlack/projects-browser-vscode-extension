@@ -3,7 +3,7 @@ import * as FS from "fs";
 import * as PATH from "path";
 import dirTree from 'directory-tree';
 import { DirectoryTree, DirectoryTreeOptions, DirectoryTreeCallback } from 'directory-tree';
-
+import { readDirData2, Repository } from "./utils";
 
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
@@ -13,7 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
   });
 
   context.subscriptions.push(disposable);
-  const projectsDataProvider = new ProjectsDataProvider("/");
+  const projectsDataProvider = new ProjectsDataProvider("/home/matteo/coding");
   vscode.window.registerTreeDataProvider("projectsBrowser", projectsDataProvider);
 }
 
@@ -35,7 +35,9 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
     } else {
       console.log(this.projectsRoots);
       if (FS.existsSync(this.projectsRoots)) {
-        let nodeTree = readDirData(this.projectsRoots, 3);
+        let nodeTree = readDirData(this.projectsRoots, 4);
+        let gitList: Repository[] = [];
+        let nodeTree2 = readDirData2(this.projectsRoots, 4, 0, gitList);
         //var folderList = this.getDirectoryFolders(this.projectsRoots);
         return Promise.resolve([nodeTree]);
       } else {
@@ -47,26 +49,25 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
 }
 
 class NodeItem extends vscode.TreeItem {
-  private isFolder: boolean = true;
   constructor(
     public readonly label: string,
     public location: string,
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded,
+    public isRepo: boolean = false,
     public children: NodeItem[] = [],
+    public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
   ) {
     super(label, collapsibleState);
     this.tooltip = `${this.location}`;
-    this.isFolder = this.label === this.location;
+    this.iconPath = new vscode.ThemeIcon(!this.isRepo ? "folder" : "git-branch");
   }
-
-  iconPath = new vscode.ThemeIcon(this.isFolder ? "folder" : "repo");
 }
 
 
 function readDirData(path: string, maxDepth: number, currentDepth: number = 0): NodeItem {
-  let item = new NodeItem(PATH.basename(path), path);
   let dirData = safeReadDirSync(path);
-  if (maxDepth > currentDepth + 1) {
+  let isGitDir = dirData.find((c) => c.name === '.git') !== undefined;
+  let item = new NodeItem(PATH.basename(path), path, isGitDir);
+  if (maxDepth > currentDepth + 1 && !item.isRepo) {
     item.children = dirData.map(child => readDirData(PATH.join(child.path, child.name), maxDepth, currentDepth + 1));
   }
   return item;
