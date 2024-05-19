@@ -35,9 +35,19 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
     } else {
       console.log(this.projectsRoots);
       if (FS.existsSync(this.projectsRoots)) {
-        let nodeTree = readDirData(this.projectsRoots, 4);
+         let nodeTree = readDirData(this.projectsRoots, 4);
         let gitList: Repository[] = [];
-        let nodeTree2 = readDirData2(this.projectsRoots, 4, 0, gitList);
+        let directoryTree = dirTree(
+          this.projectsRoots,
+          { depth: 4, extensions: /^(?!.)$/ },
+          (item, PATH, stats) => {}, 
+          (item, PATH, stats) => {
+            if (FS.readdirSync(item.path).includes('.git')) {
+              gitList.push(new Repository(item.name));
+            }
+          }
+        );
+        let prunedTree = pruneTree(directoryTree, gitList[0].name);
         //var folderList = this.getDirectoryFolders(this.projectsRoots);
         return Promise.resolve([nodeTree]);
       } else {
@@ -46,6 +56,23 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
     }
   }
 
+}
+
+function pruneTree(root: DirectoryTree, specifiedName: string): DirectoryTree | null {
+  function shouldKeepNode(node: DirectoryTree): boolean {
+    if (!node.children) {
+      return false;
+    }
+    // if (node.children.length === 0) {
+    //   return node.name === specifiedName;
+    // }
+    node.children = node.children.map(child => pruneTree(child, specifiedName)).filter(Boolean) as DirectoryTree[];
+    if (node.children.length === 0) {
+      return node.name === specifiedName;
+    }
+    return true;
+  }
+  return shouldKeepNode(root) ? root : null;
 }
 
 class NodeItem extends vscode.TreeItem {
