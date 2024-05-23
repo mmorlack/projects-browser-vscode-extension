@@ -1,9 +1,6 @@
 import * as vscode from "vscode";
 import * as FS from "fs";
 import * as PATH from "path";
-import dirTree from 'directory-tree';
-import { DirectoryTree, DirectoryTreeOptions, DirectoryTreeCallback } from 'directory-tree';
-import { readDirData2, Repository } from "./utils";
 
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
@@ -35,21 +32,10 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
     } else {
       console.log(this.projectsRoots);
       if (FS.existsSync(this.projectsRoots)) {
-         let nodeTree = readDirData(this.projectsRoots, 4);
-        let gitList: Repository[] = [];
-        let directoryTree = dirTree(
-          this.projectsRoots,
-          { depth: 4, extensions: /^(?!.)$/ },
-          (item, PATH, stats) => {}, 
-          (item, PATH, stats) => {
-            if (FS.readdirSync(item.path).includes('.git')) {
-              gitList.push(new Repository(item.name));
-            }
-          }
-        );
-        let prunedTree = pruneTree(directoryTree, gitList[0].name);
-        //var folderList = this.getDirectoryFolders(this.projectsRoots);
-        return Promise.resolve([nodeTree]);
+        let repoList: NodeItem[] = [];
+        let nodeTree = readDirData(this.projectsRoots, 4, 0, repoList);
+        let prunedNodeTree = pruneTree(nodeTree, repoList.map((r) => r.label));
+        return Promise.resolve(prunedNodeTree ? [prunedNodeTree] : []);
       } else {
         return Promise.resolve([]);
       }
@@ -58,22 +44,6 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
 
 }
 
-function pruneTree(root: DirectoryTree, specifiedName: string): DirectoryTree | null {
-  function shouldKeepNode(node: DirectoryTree): boolean {
-    if (!node.children) {
-      return false;
-    }
-    // if (node.children.length === 0) {
-    //   return node.name === specifiedName;
-    // }
-    node.children = node.children.map(child => pruneTree(child, specifiedName)).filter(Boolean) as DirectoryTree[];
-    if (node.children.length === 0) {
-      return node.name === specifiedName;
-    }
-    return true;
-  }
-  return shouldKeepNode(root) ? root : null;
-}
 
 class NodeItem extends vscode.TreeItem {
   constructor(
@@ -90,12 +60,14 @@ class NodeItem extends vscode.TreeItem {
 }
 
 
-function readDirData(path: string, maxDepth: number, currentDepth: number = 0): NodeItem {
+function readDirData(path: string, maxDepth: number, currentDepth: number = 0, repoList: NodeItem[]): NodeItem {
   let dirData = safeReadDirSync(path);
-  let isGitDir = dirData.find((c) => c.name === '.git') !== undefined;
-  let item = new NodeItem(PATH.basename(path), path, isGitDir);
+  let item = new NodeItem(PATH.basename(path), path, dirData.find((c) => c.name === '.git') !== undefined);
+  if (item.isRepo) {
+    repoList.push(item);
+  }
   if (maxDepth > currentDepth + 1 && !item.isRepo) {
-    item.children = dirData.map(child => readDirData(PATH.join(child.path, child.name), maxDepth, currentDepth + 1));
+    item.children = dirData.map(child => readDirData(PATH.join(child.path, child.name), maxDepth, currentDepth + 1, repoList));
   }
   return item;
 }
@@ -105,7 +77,7 @@ function safeReadDirSync(path: string): FS.Dirent[] {
     let dirData = FS.readdirSync(path, {withFileTypes: true}).filter(i => i.isDirectory());
     return dirData;
   } catch(ex: any) {
-    if (ex.code == "EACCES" || ex.code == "EPERM") {
+    if (ex.code === "EACCES" || ex.code === "EPERM") {
       //User does not have permissions, ignore directory
       return [];
     }
@@ -113,4 +85,18 @@ function safeReadDirSync(path: string): FS.Dirent[] {
       throw ex;
     }
   }
+}
+
+function pruneTree(root: NodeItem, nodeNames: string[]): NodeItem | null {
+  function shouldKeepNode(node: NodeItem): boolean {
+    if (!node.children) {
+      return false;
+    }
+    node.children = node.children.map(child => pruneTree(child, nodeNames)).filter(Boolean) as NodeItem[];
+    if (node.children.length === 0) {
+      return nodeNames.includes(node.label);
+    }
+    return true;
+  }
+  return shouldKeepNode(root) ? root : null;
 }
