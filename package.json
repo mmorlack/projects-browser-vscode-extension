@@ -18,6 +18,11 @@
       {
         "command": "test.helloWorld",
         "title": "Hello World"
+      },
+      {
+        "command": "_project-browser.openInNewWindow",
+        "title": "Open in new Window",
+        "icon": "$(link-external)"
       }
     ],
     "viewsContainers": {
@@ -25,7 +30,7 @@
         {
           "id": "projects-browser",
           "title": "Projects Browser",
-          "icon": "./src/dep.svg"
+          "icon": "$(folder-library)"
         }
       ]
     },
@@ -34,6 +39,15 @@
         {
           "id": "projectsBrowser",
           "name": "Projects Browser"
+        }
+      ]
+    },
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "_project-browser.openInNewWindow",
+          "when": "view == projectsBrowser && viewItem == 'repository'",
+          "group": "inline"
         }
       ]
     }

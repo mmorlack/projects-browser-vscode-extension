@@ -9,6 +9,15 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.showInformationMessage("Hello World from test!");
   });
 
+  vscode.commands.registerCommand(
+    '_project-browser.openInNewWindow',
+    async (repo: NodeItem) => {
+      if (repo) {
+        await vscode.commands.executeCommand('vscode.openFolder', repo.location, true);
+      }
+    }
+  );
+
   context.subscriptions.push(disposable);
   const projectsDataProvider = new ProjectsDataProvider("/home/matteo/coding");
   vscode.window.registerTreeDataProvider("projectsBrowser", projectsDataProvider);
@@ -56,6 +65,7 @@ class NodeItem extends vscode.TreeItem {
     super(label, collapsibleState);
     this.tooltip = `${this.location}`;
     this.iconPath = new vscode.ThemeIcon(!this.isRepo ? "folder" : "git-branch");
+    this.contextValue = this.isRepo ? 'repository' : 'folder';
   }
 }
 
