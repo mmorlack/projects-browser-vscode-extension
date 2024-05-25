@@ -5,20 +5,16 @@ import * as PATH from "path";
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
   console.log("Extension project-browser active");
-  let disposable = vscode.commands.registerCommand("test.helloWorld", () => {
-    vscode.window.showInformationMessage("Hello World from test!");
-  });
 
   vscode.commands.registerCommand(
     '_project-browser.openInNewWindow',
     async (repo: NodeItem) => {
       if (repo) {
-        await vscode.commands.executeCommand('vscode.openFolder', repo.location, true);
+        await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(repo.location) , true);
       }
     }
   );
 
-  context.subscriptions.push(disposable);
   const projectsDataProvider = new ProjectsDataProvider("/home/matteo/coding");
   vscode.window.registerTreeDataProvider("projectsBrowser", projectsDataProvider);
 }

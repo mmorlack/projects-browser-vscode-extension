@@ -16,10 +16,6 @@
   "contributes": {
     "commands": [
       {
-        "command": "test.helloWorld",
-        "title": "Hello World"
-      },
-      {
         "command": "_project-browser.openInNewWindow",
         "title": "Open in new Window",
         "icon": "$(link-external)"
