@@ -10,7 +10,6 @@
     "Other"
   ],
   "activationEvents": [
-    "onView:projectsBrowser"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -27,7 +26,8 @@
       },
       {
         "command": "projectsBrowser.filter",
-        "title": "Filter projects"
+        "title": "Filter projects",
+        "icon": "$(search)"
       }
     ],
     "viewsContainers": {
@@ -60,6 +60,11 @@
             "command": "projectsBrowser.refresh",
             "when": "view == projectsBrowser",
             "group": "navigation"
+        },
+        {
+          "command": "projectsBrowser.filter",
+          "when": "view == projectsBrowser",
+          "group": "navigation"
         }
       ]
     }

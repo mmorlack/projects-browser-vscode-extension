@@ -23,8 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
   );
 
   vscode.commands.registerCommand('projectsBrowser.filter', async () => {
-      const query = await vscode.window.showInputBox({ placeHolder: 'Type to filter' });
-      projectsDataProvider.filter(query);
+      await vscode.commands.executeCommand('list.find');
   });
   
 }
@@ -89,12 +88,12 @@ class NodeItem extends vscode.TreeItem {
     public location: string,
     public isRepo: boolean = false,
     public children: NodeItem[] = [],
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Collapsed,
   ) {
-    super(label, collapsibleState);
+    super(label);
     this.tooltip = `${this.location}`;
     this.iconPath = new vscode.ThemeIcon(!this.isRepo ? "folder" : "git-branch");
     this.contextValue = this.isRepo ? 'repository' : 'folder';
+    this.collapsibleState = this.isRepo ? vscode.TreeItemCollapsibleState.None : vscode.TreeItemCollapsibleState.Expanded;
   }
 }
 
