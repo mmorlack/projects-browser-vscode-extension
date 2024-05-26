@@ -7,7 +7,7 @@ export function activate(context: vscode.ExtensionContext) {
   console.log("Extension project-browser active");
 
   vscode.commands.registerCommand(
-    '_project-browser.openInNewWindow',
+    'projectsBrowser.openInNewWindow',
     async (repo: NodeItem) => {
       if (repo) {
         await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(repo.location) , true);
@@ -17,15 +17,56 @@ export function activate(context: vscode.ExtensionContext) {
 
   const projectsDataProvider = new ProjectsDataProvider("/home/matteo/coding");
   vscode.window.registerTreeDataProvider("projectsBrowser", projectsDataProvider);
+
+  vscode.commands.registerCommand('projectsBrowser.refresh', () =>
+    projectsDataProvider.refresh()
+  );
+
+  vscode.commands.registerCommand('projectsBrowser.filter', async () => {
+      const query = await vscode.window.showInputBox({ placeHolder: 'Type to filter' });
+      projectsDataProvider.filter(query);
+  });
+  
 }
 
 // This method is called when your extension is deactivated
 export function deactivate() {}
 
 export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
+  private treeData: NodeItem[];
+
   constructor(private projectsRoots: string) {
     this.projectsRoots = projectsRoots;
+    this.treeData = this.getTreeData();
   }
+
+  private _onDidChangeTreeData: vscode.EventEmitter<NodeItem | undefined | null | void> = new vscode.EventEmitter<NodeItem | undefined | null | void>();
+  readonly onDidChangeTreeData: vscode.Event<NodeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+
+  refresh(): void {
+    this.treeData = this.getTreeData();
+    this._onDidChangeTreeData.fire();
+  }
+
+  filter(query: string | undefined) {
+    if (query) {
+      let filteredNodeTree = pruneTree(this.treeData[0], [query]);
+      this.treeData = filteredNodeTree? [filteredNodeTree] : [];
+    }
+    this._onDidChangeTreeData.fire();
+  }
+
+  getTreeData(): NodeItem[] {
+    console.log(`Retrieving data from folder ${this.projectsRoots}`);
+    if (FS.existsSync(this.projectsRoots)) {
+      let repoList: NodeItem[] = [];
+      let nodeTree = readDirData(this.projectsRoots, 4, 0, repoList);
+      let prunedNodeTree = pruneTree(nodeTree, repoList.map((r) => r.label));
+      return prunedNodeTree ? [prunedNodeTree] : [];
+    } else {
+      return [];
+    }
+  };
 
   getTreeItem(element: NodeItem): vscode.TreeItem {
     return element;
@@ -35,15 +76,7 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
     if (element) {
       return Promise.resolve(element.children);
     } else {
-      console.log(this.projectsRoots);
-      if (FS.existsSync(this.projectsRoots)) {
-        let repoList: NodeItem[] = [];
-        let nodeTree = readDirData(this.projectsRoots, 4, 0, repoList);
-        let prunedNodeTree = pruneTree(nodeTree, repoList.map((r) => r.label));
-        return Promise.resolve(prunedNodeTree ? [prunedNodeTree] : []);
-      } else {
-        return Promise.resolve([]);
-      }
+      return Promise.resolve(this.treeData);
     }
   }
 

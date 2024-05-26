@@ -16,9 +16,18 @@
   "contributes": {
     "commands": [
       {
-        "command": "_project-browser.openInNewWindow",
+        "command": "projectsBrowser.openInNewWindow",
         "title": "Open in new Window",
         "icon": "$(link-external)"
+      },
+      {
+        "command": "projectsBrowser.refresh",
+        "title": "Reload projects",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "projectsBrowser.filter",
+        "title": "Filter projects"
       }
     ],
     "viewsContainers": {
@@ -41,9 +50,16 @@
     "menus": {
       "view/item/context": [
         {
-          "command": "_project-browser.openInNewWindow",
+          "command": "projectsBrowser.openInNewWindow",
           "when": "view == projectsBrowser && viewItem == 'repository'",
           "group": "inline"
+        }
+      ],
+      "view/title": [
+        {
+            "command": "projectsBrowser.refresh",
+            "when": "view == projectsBrowser",
+            "group": "navigation"
         }
       ]
     }
