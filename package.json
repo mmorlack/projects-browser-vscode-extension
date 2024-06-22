@@ -13,6 +13,43 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Projects Browser",
+      "properties": {
+        "projectsBrowser.rootFolders": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "title": "inner objects",
+            "properties": {
+              "rootFolder": {
+                  "type": "string",
+                  "description": "Root folder to search repositories"
+              },
+              "recurseAfterFirstHit": {
+                  "type": "boolean",
+                  "description": "Wheter to recurse into folders after finding a project",
+                  "default": false
+              },
+              "maxDepth": {
+                "type": "number",
+                "default": 1,
+                "description": "Maximum depth for scanning root directory"
+              },
+              "projectsType": {
+                "type": "string",
+                "default": "git",
+                "description": "Type of projects to search under rootFolder",
+                "enum": [
+                  "git"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
     "commands": [
       {
         "command": "projectsBrowser.openInNewWindow",
@@ -51,7 +88,7 @@
       "view/item/context": [
         {
           "command": "projectsBrowser.openInNewWindow",
-          "when": "view == projectsBrowser && viewItem == 'repository'",
+          "when": "view == projectsBrowser && viewItem == 'project'",
           "group": "inline"
         }
       ],
