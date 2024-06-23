@@ -9,8 +9,7 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-  ],
+  "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
@@ -24,13 +23,13 @@
             "additionalProperties": false,
             "properties": {
               "rootFolder": {
-                  "type": "string",
-                  "description": "Root folder to search repositories"
+                "type": "string",
+                "description": "Root folder to search repositories"
               },
               "recurseAfterFirstHit": {
-                  "type": "boolean",
-                  "description": "Wheter to recurse into folders after finding a project",
-                  "default": false
+                "type": "boolean",
+                "description": "Wheter to recurse into folders after finding a project",
+                "default": false
               },
               "maxDepth": {
                 "type": "number",
@@ -46,7 +45,7 @@
                 ]
               },
               "customIcons": {
-                "type":"array",
+                "type": "array",
                 "default": [],
                 "items": {
                   "type": "object",
@@ -63,7 +62,8 @@
                       "type": "string",
                       "description": "Wheter matcher should apply to folders or projects",
                       "enum": [
-                        "folder", "project"
+                        "folder",
+                        "project"
                       ]
                     }
                   }
@@ -118,9 +118,9 @@
       ],
       "view/title": [
         {
-            "command": "projectsBrowser.refresh",
-            "when": "view == projectsBrowser",
-            "group": "navigation"
+          "command": "projectsBrowser.refresh",
+          "when": "view == projectsBrowser",
+          "group": "navigation"
         },
         {
           "command": "projectsBrowser.filter",
@@ -148,5 +148,8 @@
     "@vscode/test-electron": "^2.3.9",
     "eslint": "^8.56.0",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@mdi/js": "^7.4.47"
   }
 }

@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
 import * as FS from "fs";
 import * as PATH from "path";
+import * as mdiIcons from "@mdi/js";
 
 interface ProjectsPropertiesConfig {
   maxDepth?: number; 
@@ -106,12 +107,12 @@ class NodeItem extends vscode.TreeItem {
     public readonly label: string,
     public location: string,
     public isProject: boolean = false,
-    public icon: string = "folder",
+    public icon: vscode.Uri | vscode.ThemeIcon,
     public children: NodeItem[] = []
   ) {
     super(label);
     this.tooltip = `${this.location}`;
-    this.iconPath = new vscode.ThemeIcon(this.icon);
+    this.iconPath = this.icon;
     this.contextValue = this.isProject ? "project" : "folder";
     this.collapsibleState = this.isProject
       ? vscode.TreeItemCollapsibleState.None
@@ -180,18 +181,25 @@ function isProjectFactory(projectType: string) {
   }
 }
 
-function getIcon(iconConfigs: CustomIcons[], path: string, isProject: boolean): string {
+function getIcon(iconConfigs: CustomIcons[], path: string, isProject: boolean): vscode.Uri | vscode.ThemeIcon {
+
+  function _getIcon(icon: string): vscode.Uri | vscode.ThemeIcon {
+
+    let i = mdiIcons["mdiAbTesting"];
+    return FS.existsSync(icon) ? vscode.Uri.parse(icon) : new vscode.ThemeIcon(icon);
+  }
+
   let pathType = isProject ? 'project' : 'folder';
   for (const iconConfig of iconConfigs){
     const regex = new RegExp(iconConfig.matcher);
     if (regex.test(path) && pathType === iconConfig.applysTo) {
-      return iconConfig.icon;
+      return _getIcon(iconConfig.icon);
     }
   }
   // defaults
   // TODO: move this to settings
   if (isProject) {
-    return 'git-branch';
+    return _getIcon('git-branch');
   }
-  return 'folder';
+  return _getIcon('folder');
 }
