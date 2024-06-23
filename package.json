@@ -21,7 +21,7 @@
           "default": [],
           "items": {
             "type": "object",
-            "title": "inner objects",
+            "additionalProperties": false,
             "properties": {
               "rootFolder": {
                   "type": "string",
@@ -44,6 +44,30 @@
                 "enum": [
                   "git"
                 ]
+              },
+              "customIcons": {
+                "type":"array",
+                "default": [],
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "matcher": {
+                      "type": "string",
+                      "description": "Regex matcher"
+                    },
+                    "icon": {
+                      "type": "string",
+                      "description": "Name of the icon to use"
+                    },
+                    "applysTo": {
+                      "type": "string",
+                      "description": "Wheter matcher should apply to folders or projects",
+                      "enum": [
+                        "folder", "project"
+                      ]
+                    }
+                  }
+                }
               }
             }
           }

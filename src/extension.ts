@@ -3,13 +3,16 @@ import * as FS from "fs";
 import * as PATH from "path";
 
 interface ProjectsPropertiesConfig {
-  maxDepth: number; 
-  // customIcons: { 
-  //   name: string; 
-  //   icon: string 
-  // }; 
-  recurseAfterFirstHit: boolean 
-  projectsType: string
+  maxDepth?: number; 
+  customIcons?: CustomIcons[]; 
+  recurseAfterFirstHit?: boolean 
+  projectsType?: string
+}
+
+interface CustomIcons {
+  matcher: string;
+  icon: string;
+  applysTo: string;
 }
 
 interface ProjectsConfig extends ProjectsPropertiesConfig {
@@ -123,15 +126,16 @@ function readDirData(
   configs: ProjectsPropertiesConfig
 ): NodeItem {
   let dirData = safeReadDirSync(path);
-  let isProject = isProjectFactory(configs.projectsType)(dirData, configs);
-  let item = new NodeItem(PATH.basename(path), path, isProject, isProject ? "git-branch" : "folder");
+  let isProject = isProjectFactory(configs.projectsType || 'git')(dirData, configs);
+  let icon = getIcon(configs.customIcons || [], path, isProject);
+  let item = new NodeItem(PATH.basename(path), path, isProject, icon);
   if (item.isProject) {
     repoList.push(item);
     if (!configs.recurseAfterFirstHit) {
       return item;
     }
   }
-  if (configs.maxDepth > currentDepth + 1) {
+  if ((configs.maxDepth || 4) > currentDepth + 1) {
     item.children = dirData.map((child) =>
       readDirData(PATH.join(child.path, child.name), currentDepth + 1, repoList, configs)
     );
@@ -174,4 +178,20 @@ function isProjectFactory(projectType: string) {
     default:
       throw new Error(`Unknown project type: ${projectType}`);
   }
+}
+
+function getIcon(iconConfigs: CustomIcons[], path: string, isProject: boolean): string {
+  let pathType = isProject ? 'project' : 'folder';
+  for (const iconConfig of iconConfigs){
+    const regex = new RegExp(iconConfig.matcher);
+    if (regex.test(path) && pathType === iconConfig.applysTo) {
+      return iconConfig.icon;
+    }
+  }
+  // defaults
+  // TODO: move this to settings
+  if (isProject) {
+    return 'git-branch';
+  }
+  return 'folder';
 }
