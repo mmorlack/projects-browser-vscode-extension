@@ -10,14 +10,85 @@
     "Other"
   ],
   "activationEvents": [
-    "onView:projectsBrowser"
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "Projects Browser",
+      "properties": {
+        "projectsBrowser.rootFolders": {
+          "type": "array",
+          "default": [],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "rootFolder": {
+                  "type": "string",
+                  "description": "Root folder to search repositories"
+              },
+              "recurseAfterFirstHit": {
+                  "type": "boolean",
+                  "description": "Wheter to recurse into folders after finding a project",
+                  "default": false
+              },
+              "maxDepth": {
+                "type": "number",
+                "default": 1,
+                "description": "Maximum depth for scanning root directory"
+              },
+              "projectsType": {
+                "type": "string",
+                "default": "git",
+                "description": "Type of projects to search under rootFolder",
+                "enum": [
+                  "git"
+                ]
+              },
+              "customIcons": {
+                "type":"array",
+                "default": [],
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "matcher": {
+                      "type": "string",
+                      "description": "Regex matcher"
+                    },
+                    "icon": {
+                      "type": "string",
+                      "description": "Name of the icon to use"
+                    },
+                    "applysTo": {
+                      "type": "string",
+                      "description": "Wheter matcher should apply to folders or projects",
+                      "enum": [
+                        "folder", "project"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "commands": [
       {
-        "command": "test.helloWorld",
-        "title": "Hello World"
+        "command": "projectsBrowser.openInNewWindow",
+        "title": "Open in new Window",
+        "icon": "$(link-external)"
+      },
+      {
+        "command": "projectsBrowser.refresh",
+        "title": "Reload projects",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "projectsBrowser.filter",
+        "title": "Filter projects",
+        "icon": "$(search)"
       }
     ],
     "viewsContainers": {
@@ -25,7 +96,7 @@
         {
           "id": "projects-browser",
           "title": "Projects Browser",
-          "icon": "./src/dep.svg"
+          "icon": "$(folder-library)"
         }
       ]
     },
@@ -34,6 +105,27 @@
         {
           "id": "projectsBrowser",
           "name": "Projects Browser"
+        }
+      ]
+    },
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "projectsBrowser.openInNewWindow",
+          "when": "view == projectsBrowser && viewItem == 'project'",
+          "group": "inline"
+        }
+      ],
+      "view/title": [
+        {
+            "command": "projectsBrowser.refresh",
+            "when": "view == projectsBrowser",
+            "group": "navigation"
+        },
+        {
+          "command": "projectsBrowser.filter",
+          "when": "view == projectsBrowser",
+          "group": "navigation"
         }
       ]
     }
@@ -56,8 +148,5 @@
     "@vscode/test-electron": "^2.3.9",
     "eslint": "^8.56.0",
     "typescript": "^5.3.3"
-  },
-  "dependencies": {
-    "directory-tree": "^3.5.1"
   }
 }

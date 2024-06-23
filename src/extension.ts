@@ -1,28 +1,91 @@
 import * as vscode from "vscode";
 import * as FS from "fs";
 import * as PATH from "path";
-import dirTree from 'directory-tree';
-import { DirectoryTree, DirectoryTreeOptions, DirectoryTreeCallback } from 'directory-tree';
 
+interface ProjectsPropertiesConfig {
+  maxDepth?: number; 
+  customIcons?: CustomIcons[]; 
+  recurseAfterFirstHit?: boolean 
+  projectsType?: string
+}
+
+interface CustomIcons {
+  matcher: string;
+  icon: string;
+  applysTo: string;
+}
+
+interface ProjectsConfig extends ProjectsPropertiesConfig {
+  rootFolder: string;
+}
 
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
   console.log("Extension project-browser active");
-  let disposable = vscode.commands.registerCommand("test.helloWorld", () => {
-    vscode.window.showInformationMessage("Hello World from test!");
+
+  vscode.commands.registerCommand("projectsBrowser.openInNewWindow", async (repo: NodeItem) => {
+    if (repo) {
+      await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(repo.location), true);
+    }
   });
 
-  context.subscriptions.push(disposable);
-  const projectsDataProvider = new ProjectsDataProvider("/");
+  const projectsDataProvider = new ProjectsDataProvider();
   vscode.window.registerTreeDataProvider("projectsBrowser", projectsDataProvider);
+
+  vscode.commands.registerCommand("projectsBrowser.refresh", () => projectsDataProvider.refresh());
+
+  vscode.commands.registerCommand("projectsBrowser.filter", async () => {
+    await vscode.commands.executeCommand("list.find");
+  });
 }
 
 // This method is called when your extension is deactivated
 export function deactivate() {}
 
 export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
-  constructor(private projectsRoots: string) {
-    this.projectsRoots = projectsRoots;
+  private treeData: NodeItem[];
+
+  constructor() {
+    this.treeData = this.getTreeData();
+  }
+
+  private _onDidChangeTreeData: vscode.EventEmitter<NodeItem | undefined | null | void> = new vscode.EventEmitter<
+    NodeItem | undefined | null | void
+  >();
+  readonly onDidChangeTreeData: vscode.Event<NodeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+
+  refresh(): void {
+    this.treeData = this.getTreeData();
+    this._onDidChangeTreeData.fire();
+  }
+
+  filter(query: string | undefined) {
+    if (query) {
+      let filteredNodeTree = pruneTree(this.treeData[0], [query]);
+      this.treeData = filteredNodeTree ? [filteredNodeTree] : [];
+    }
+    this._onDidChangeTreeData.fire();
+  }
+
+  getTreeData(): NodeItem[] {
+    let projectsRoots = vscode.workspace.getConfiguration("projectsBrowser").get("rootFolders") as ProjectsConfig[];
+    let projects = [];
+    for (var projectConfig of projectsRoots) {
+      const {rootFolder, ...configs} = projectConfig;
+      console.log(`Retrieving data from folder ${rootFolder}`);
+      if (FS.existsSync(rootFolder)) {
+        let repoList: NodeItem[] = [];
+        let nodeTree = readDirData(rootFolder, 0, repoList, configs);
+        let prunedNodeTree = pruneTree(
+          nodeTree,
+          repoList.map((r) => r.label)
+        );
+        if (prunedNodeTree) {
+          projects.push(prunedNodeTree);
+        }
+      }
+    }
+    return projects;
   }
 
   getTreeItem(element: NodeItem): vscode.TreeItem {
@@ -33,56 +96,102 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
     if (element) {
       return Promise.resolve(element.children);
     } else {
-      console.log(this.projectsRoots);
-      if (FS.existsSync(this.projectsRoots)) {
-        let nodeTree = readDirData(this.projectsRoots, 3);
-        //var folderList = this.getDirectoryFolders(this.projectsRoots);
-        return Promise.resolve([nodeTree]);
-      } else {
-        return Promise.resolve([]);
-      }
+      return Promise.resolve(this.treeData);
     }
   }
-
 }
 
 class NodeItem extends vscode.TreeItem {
-  private isFolder: boolean = true;
   constructor(
     public readonly label: string,
     public location: string,
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.Expanded,
-    public children: NodeItem[] = [],
+    public isProject: boolean = false,
+    public icon: string = "folder",
+    public children: NodeItem[] = []
   ) {
-    super(label, collapsibleState);
+    super(label);
     this.tooltip = `${this.location}`;
-    this.isFolder = this.label === this.location;
+    this.iconPath = new vscode.ThemeIcon(this.icon);
+    this.contextValue = this.isProject ? "project" : "folder";
+    this.collapsibleState = this.isProject
+      ? vscode.TreeItemCollapsibleState.None
+      : vscode.TreeItemCollapsibleState.Expanded;
   }
-
-  iconPath = new vscode.ThemeIcon(this.isFolder ? "folder" : "repo");
 }
 
-
-function readDirData(path: string, maxDepth: number, currentDepth: number = 0): NodeItem {
-  let item = new NodeItem(PATH.basename(path), path);
+function readDirData(
+  path: string,
+  currentDepth: number = 0,
+  repoList: NodeItem[],
+  configs: ProjectsPropertiesConfig
+): NodeItem {
   let dirData = safeReadDirSync(path);
-  if (maxDepth > currentDepth + 1) {
-    item.children = dirData.map(child => readDirData(PATH.join(child.path, child.name), maxDepth, currentDepth + 1));
+  let isProject = isProjectFactory(configs.projectsType || 'git')(dirData, configs);
+  let icon = getIcon(configs.customIcons || [], path, isProject);
+  let item = new NodeItem(PATH.basename(path), path, isProject, icon);
+  if (item.isProject) {
+    repoList.push(item);
+    if (!configs.recurseAfterFirstHit) {
+      return item;
+    }
+  }
+  if ((configs.maxDepth || 4) > currentDepth + 1) {
+    item.children = dirData.map((child) =>
+      readDirData(PATH.join(child.path, child.name), currentDepth + 1, repoList, configs)
+    );
   }
   return item;
 }
 
 function safeReadDirSync(path: string): FS.Dirent[] {
   try {
-    let dirData = FS.readdirSync(path, {withFileTypes: true}).filter(i => i.isDirectory());
+    let dirData = FS.readdirSync(path, { withFileTypes: true }).filter((i) => i.isDirectory());
     return dirData;
-  } catch(ex: any) {
-    if (ex.code == "EACCES" || ex.code == "EPERM") {
+  } catch (ex: any) {
+    if (ex.code === "EACCES" || ex.code === "EPERM") {
       //User does not have permissions, ignore directory
       return [];
-    }
-    else {
+    } else {
       throw ex;
     }
   }
+}
+
+function pruneTree(root: NodeItem, nodeNames: string[]): NodeItem | null {
+  function shouldKeepNode(node: NodeItem): boolean {
+    if (!node.children) {
+      return false;
+    }
+    node.children = node.children.map((child) => pruneTree(child, nodeNames)).filter(Boolean) as NodeItem[];
+    if (node.children.length === 0) {
+      return nodeNames.includes(node.label);
+    }
+    return true;
+  }
+  return shouldKeepNode(root) ? root : null;
+}
+
+function isProjectFactory(projectType: string) {
+  switch (projectType) {
+    case "git":
+      return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => dirData.find((c) => c.name === ".git") !== undefined;
+    default:
+      throw new Error(`Unknown project type: ${projectType}`);
+  }
+}
+
+function getIcon(iconConfigs: CustomIcons[], path: string, isProject: boolean): string {
+  let pathType = isProject ? 'project' : 'folder';
+  for (const iconConfig of iconConfigs){
+    const regex = new RegExp(iconConfig.matcher);
+    if (regex.test(path) && pathType === iconConfig.applysTo) {
+      return iconConfig.icon;
+    }
+  }
+  // defaults
+  // TODO: move this to settings
+  if (isProject) {
+    return 'git-branch';
+  }
+  return 'folder';
 }
