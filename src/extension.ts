@@ -184,15 +184,6 @@ function isProjectFactory(projectType: string) {
 function getIcon(iconConfigs: CustomIcons[], path: string, isProject: boolean): vscode.Uri | vscode.ThemeIcon {
 
   function _getIcon(icon: string): vscode.Uri | vscode.ThemeIcon {
-
-    let mdiIcon: string | undefined = mdiIcons[icon as keyof typeof mdiIcons];
-    if (mdiIcon) {
-      const iconPath = vscode.Uri.joinPath(context.globalStoragePath, `${icon}.svg`);
-      if (!FS.existsSync(iconPath.path)) {
-        FS.writeFileSync(iconPath.path, mdiIcon);
-      }
-      return iconPath;
-    }
     return FS.existsSync(icon) ? vscode.Uri.parse(icon) : new vscode.ThemeIcon(icon);
   }
 
