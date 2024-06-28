@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { NodeItem, ProjectsDataProvider } from "./projectsprovider";
-import { ProjectsFavoritesDataProvider } from "./projectsfavoritesprovider";
+import { FavoriteProject, ProjectsFavoritesDataProvider } from "./projectsfavoritesprovider";
 
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
@@ -14,20 +14,21 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.commands.registerCommand("projectsBrowser.addToFavorites", async (proj: NodeItem) => {
     if (proj) {
-      console.log(proj);
-      const globalState = context.globalState;
-      var favList: NodeItem[] = globalState.get('projectsBrowser.favList') || [];
-      favList.push(proj);
-      globalState.update('projectsBrowser.favList', favList);
-      console.log(globalState.get('projectsBrowser.favList'))
-      //context.globalState.update()
+      var favList: FavoriteProject[] = context.globalState.get('projectsBrowser.favList') || [];
+      favList = favList.map(item => new FavoriteProject(item.label, item.location, true, item.icon));
+      var favProj = new FavoriteProject(proj.label, proj.location, true, proj.icon);
+      if (!favList.includes(favProj)) {
+        favList.push(favProj);
+        context.globalState.update('projectsBrowser.favList', favList);
+      }
+      console.log(context.globalState.get('projectsBrowser.favList'));
     }
   });
 
   const projectsDataProvider = new ProjectsDataProvider();
   vscode.window.registerTreeDataProvider("projectsBrowser", projectsDataProvider);
 
-  const projectsFavoritesDataProvider = new ProjectsFavoritesDataProvider();
+  const projectsFavoritesDataProvider = new ProjectsFavoritesDataProvider(context);
   vscode.window.registerTreeDataProvider("projectsBrowserFavorites", projectsFavoritesDataProvider);
 
   vscode.commands.registerCommand("projectsBrowser.refresh", () => projectsDataProvider.refresh());

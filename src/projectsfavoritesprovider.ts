@@ -7,8 +7,9 @@ export class ProjectsFavoritesDataProvider implements vscode.TreeDataProvider<Fa
 
     private favList: FavoriteProject[];
 
-    constructor() {
-        this.favList = [];
+    constructor(context: vscode.ExtensionContext) {
+        this.favList = context.globalState.get('projectsBrowser.favList') || [];
+        this.favList = this.favList.map(item => new FavoriteProject(item.label, item.location, true, item.icon));
       }
 
     getTreeItem(element: FavoriteProject): vscode.TreeItem | Thenable<vscode.TreeItem> {
@@ -21,7 +22,7 @@ export class ProjectsFavoritesDataProvider implements vscode.TreeDataProvider<Fa
 
 }
 
-class FavoriteProject extends vscode.TreeItem {
+export class FavoriteProject extends vscode.TreeItem {
     constructor(
       public readonly label: string,
       public location: string,
@@ -34,4 +35,5 @@ class FavoriteProject extends vscode.TreeItem {
       this.contextValue = "project";
       this.collapsibleState = vscode.TreeItemCollapsibleState.None;
     }
+    
   }
