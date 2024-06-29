@@ -1,4 +1,5 @@
 import * as vscode from "vscode";
+import { PROJECT_FAVTORITES_KEY, retrieveMap } from "./extension";
 
 
 
@@ -21,9 +22,12 @@ export class ProjectsFavoritesDataProvider implements vscode.TreeDataProvider<Fa
         return Promise.resolve(this.favList);
     }
 
-    getTreeData(context: vscode.ExtensionContext) {
-      var favList: FavoriteProject[] = context.globalState.get('projectsBrowser.favList') || [];
-      favList = favList.map(item => new FavoriteProject(item.label, item.location, true, item.icon));
+    getTreeData(context: vscode.ExtensionContext): FavoriteProject[] {
+      var favMap = retrieveMap(context, PROJECT_FAVTORITES_KEY) as Map<string, FavoriteProject>;
+      var favList = [];
+      for (let item of favMap.values()) {
+        favList.push(new FavoriteProject(item.label, item.location, true, item.icon));
+      };
       return favList;
     }
 
