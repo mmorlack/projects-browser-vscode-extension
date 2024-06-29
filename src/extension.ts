@@ -34,15 +34,16 @@ export function activate(context: vscode.ExtensionContext) {
     }
   });
 
-  vscode.commands.registerCommand("projectsBrowser.clearFavorites", async (proj?: FavoriteProject) => {
-    if (proj) {
-      var favMap: Map<string, object> = retrieveMap(context, PROJECT_FAVTORITES_KEY);
-      favMap.delete(proj.label);
-      storeMap(context, PROJECT_FAVTORITES_KEY, favMap);
-    } else {
-      await context.globalState.update(PROJECT_FAVTORITES_KEY, undefined);
-    }
+  vscode.commands.registerCommand("projectsBrowser.clearFavorite", async (proj: FavoriteProject) => {
+    var favMap: Map<string, object> = retrieveMap(context, PROJECT_FAVTORITES_KEY);
+    favMap.delete(proj.label);
+    storeMap(context, PROJECT_FAVTORITES_KEY, favMap);
     console.log(retrieveMap(context, PROJECT_FAVTORITES_KEY));
+    projectsFavoritesDataProvider.refresh(context);
+  });
+
+  vscode.commands.registerCommand("projectsBrowser.clearFavorites", () => {
+    context.globalState.update(PROJECT_FAVTORITES_KEY, undefined);
     projectsFavoritesDataProvider.refresh(context);
   });
 

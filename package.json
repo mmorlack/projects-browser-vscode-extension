@@ -85,11 +85,16 @@
       {
         "command": "projectsBrowser.addToFavorites",
         "title": "Add to favorites",
-        "icon": "$(star)"
+        "icon": "$(heart)"
       },
       {
         "command": "projectsBrowser.clearFavorites",
-        "title": "Clear favorites or remove single favorite",
+        "title": "Remove all favorites",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "projectsBrowser.clearFavorite",
+        "title": "Remove from favorites",
         "icon": "$(trash)"
       },
       {
@@ -137,9 +142,9 @@
           "group": "inline"
         },
         {
-          "command": "projectsBrowser.clearFavorites",
+          "command": "projectsBrowser.clearFavorite",
           "when": "view == projectsBrowserFavorites  && viewItem == 'project'",
-          "group": "inline"
+          "group": "navigation"
         }
       ],
       "view/title": [
