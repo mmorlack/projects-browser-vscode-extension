@@ -31,7 +31,7 @@ export class FavoriteProject extends vscode.TreeItem {
     ) {
       super(label);
       this.tooltip = `${this.location}`;
-      this.iconPath = this.icon;
+      this.iconPath = new vscode.ThemeIcon('git-branch');
       this.contextValue = "project";
       this.collapsibleState = vscode.TreeItemCollapsibleState.None;
     }
