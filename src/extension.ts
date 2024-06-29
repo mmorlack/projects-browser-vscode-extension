@@ -6,6 +6,12 @@ import { FavoriteProject, ProjectsFavoritesDataProvider } from "./projectsfavori
 export function activate(context: vscode.ExtensionContext) {
   console.log("Extension project-browser active");
 
+  const projectsDataProvider = new ProjectsDataProvider();
+  vscode.window.registerTreeDataProvider("projectsBrowser", projectsDataProvider);
+
+  const projectsFavoritesDataProvider = new ProjectsFavoritesDataProvider(context);
+  vscode.window.registerTreeDataProvider("projectsBrowserFavorites", projectsFavoritesDataProvider);
+
   vscode.commands.registerCommand("projectsBrowser.openInNewWindow", async (proj: NodeItem) => {
     if (proj) {
       await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(proj.location), true);
@@ -20,16 +26,12 @@ export function activate(context: vscode.ExtensionContext) {
       if (!favList.includes(favProj)) {
         favList.push(favProj);
         context.globalState.update('projectsBrowser.favList', favList);
+        projectsFavoritesDataProvider.refresh(context);
       }
       console.log(context.globalState.get('projectsBrowser.favList'));
     }
   });
 
-  const projectsDataProvider = new ProjectsDataProvider();
-  vscode.window.registerTreeDataProvider("projectsBrowser", projectsDataProvider);
-
-  const projectsFavoritesDataProvider = new ProjectsFavoritesDataProvider(context);
-  vscode.window.registerTreeDataProvider("projectsBrowserFavorites", projectsFavoritesDataProvider);
 
   vscode.commands.registerCommand("projectsBrowser.refresh", () => projectsDataProvider.refresh());
 

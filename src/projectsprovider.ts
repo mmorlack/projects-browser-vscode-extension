@@ -11,9 +11,8 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
       this.treeData = this.getTreeData();
     }
   
-    private _onDidChangeTreeData: vscode.EventEmitter<NodeItem | undefined | null | void> = new vscode.EventEmitter<
-      NodeItem | undefined | null | void
-    >();
+    private _onDidChangeTreeData: vscode.EventEmitter<NodeItem | undefined | null | void> = 
+      new vscode.EventEmitter<NodeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<NodeItem | undefined | null | void> = this._onDidChangeTreeData.event;
   
     refresh(): void {

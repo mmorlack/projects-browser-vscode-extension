@@ -3,14 +3,15 @@ import * as vscode from "vscode";
 
 
 export class ProjectsFavoritesDataProvider implements vscode.TreeDataProvider<FavoriteProject> {
-    onDidChangeTreeData?: vscode.Event<void | FavoriteProject | FavoriteProject[] | null | undefined> | undefined;
+    private _onDidChangeTreeData: vscode.EventEmitter<FavoriteProject | undefined | null | void> = 
+      new vscode.EventEmitter<FavoriteProject | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<FavoriteProject | undefined | null | void> = this._onDidChangeTreeData.event;
 
     private favList: FavoriteProject[];
 
     constructor(context: vscode.ExtensionContext) {
-        this.favList = context.globalState.get('projectsBrowser.favList') || [];
-        this.favList = this.favList.map(item => new FavoriteProject(item.label, item.location, true, item.icon));
-      }
+      this.favList = this.getTreeData(context);
+    }
 
     getTreeItem(element: FavoriteProject): vscode.TreeItem | Thenable<vscode.TreeItem> {
         return element;
@@ -20,6 +21,16 @@ export class ProjectsFavoritesDataProvider implements vscode.TreeDataProvider<Fa
         return Promise.resolve(this.favList);
     }
 
+    getTreeData(context: vscode.ExtensionContext) {
+      var favList: FavoriteProject[] = context.globalState.get('projectsBrowser.favList') || [];
+      favList = favList.map(item => new FavoriteProject(item.label, item.location, true, item.icon));
+      return favList;
+    }
+
+    refresh(context: vscode.ExtensionContext) {
+      this.favList = this.getTreeData(context);
+      this._onDidChangeTreeData.fire();
+  }
 }
 
 export class FavoriteProject extends vscode.TreeItem {
