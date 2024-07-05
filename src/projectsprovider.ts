@@ -3,7 +3,6 @@ import * as FS from "fs";
 import * as PATH from "path";
 import { CustomIcons, ProjectsConfig, ProjectsPropertiesConfig } from "./interfaces";
 
-
 export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
     private treeData: NodeItem[];
   
@@ -63,6 +62,7 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
   }
   
   export class NodeItem extends vscode.TreeItem {
+
     constructor(
       public readonly label: string,
       public location: string,
@@ -78,6 +78,7 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
         ? vscode.TreeItemCollapsibleState.None
         : vscode.TreeItemCollapsibleState.Expanded;
     }
+
   }
   
   function readDirData(

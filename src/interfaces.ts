@@ -15,3 +15,13 @@ export interface CustomIcons {
 export interface ProjectsConfig extends ProjectsPropertiesConfig {
     rootFolder: string;
   }
+
+export interface NodeItemObject {
+  label: string;
+  tooltip: string;
+  isProject: boolean;
+  icon: {
+    path: string;
+    isCodicon: boolean;
+  }
+}
