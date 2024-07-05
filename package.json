@@ -113,7 +113,7 @@
         {
           "id": "projects-browser",
           "title": "Projects Browser",
-          "icon": "$(folder-library)"
+          "icon": "$(repo)"
         }
       ]
     },
@@ -121,11 +121,11 @@
       "projects-browser": [
         {
           "id": "projectsBrowser",
-          "name": "Projects Browser"
+          "name": "Projects"
         },
         {
           "id": "projectsBrowserFavorites",
-          "name": "Projects Browser Favorites"
+          "name": "Favorites"
         }
       ]
     },
