@@ -1,14 +1,14 @@
 import * as vscode from "vscode";
-import { NodeItemObject } from "./interfaces";
+import { ProjectTreeItemObject } from "./interfaces";
 
-export class NodeItem extends vscode.TreeItem {
+export class ProjectTreeItem extends vscode.TreeItem {
 
     constructor(
         public readonly label: string,
         public tooltip: string,
         public isProject: boolean = false,
         public icon: vscode.Uri | vscode.ThemeIcon,
-        public children: NodeItem[] = []
+        public children: ProjectTreeItem[] = []
     ) {
         super(label);
         this.tooltip = `${this.tooltip}`;
@@ -19,7 +19,7 @@ export class NodeItem extends vscode.TreeItem {
             : vscode.TreeItemCollapsibleState.Expanded;
     }
 
-    static fromObject(obj: NodeItemObject) {
+    static fromObject(obj: ProjectTreeItemObject) {
         return new this(
             obj.label,
             obj.tooltip,
@@ -30,7 +30,7 @@ export class NodeItem extends vscode.TreeItem {
         );
     }
 
-    toObject(): NodeItemObject {
+    toObject(): ProjectTreeItemObject {
         return {
             label: this.label,
             tooltip: this.tooltip,

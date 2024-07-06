@@ -43,7 +43,9 @@
                 "default": "git",
                 "description": "Type of projects to search under rootFolder",
                 "enum": [
-                  "git"
+                  "git",
+                  "vscode",
+                  "idea"
                 ]
               },
               "customIcons": {

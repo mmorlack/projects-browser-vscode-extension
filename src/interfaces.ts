@@ -16,7 +16,7 @@ export interface ProjectsConfig extends ProjectsPropertiesConfig {
     rootFolder: string;
   }
 
-export interface NodeItemObject {
+export interface ProjectTreeItemObject {
   label: string;
   tooltip: string;
   isProject: boolean;

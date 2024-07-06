@@ -2,17 +2,18 @@ import * as vscode from "vscode";
 import * as FS from "fs";
 import * as PATH from "path";
 import { CustomIcons, ProjectsConfig, ProjectsPropertiesConfig } from "./interfaces";
+import { ProjectTreeItem } from "./common";
 
-export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
-    private treeData: NodeItem[];
+export class ProjectsDataProvider implements vscode.TreeDataProvider<ProjectTreeItem> {
+    private treeData: ProjectTreeItem[];
   
     constructor() {
       this.treeData = this.getTreeData();
     }
   
-    private _onDidChangeTreeData: vscode.EventEmitter<NodeItem | undefined | null | void> = 
-      new vscode.EventEmitter<NodeItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<NodeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+    private _onDidChangeTreeData: vscode.EventEmitter<ProjectTreeItem | undefined | null | void> = 
+      new vscode.EventEmitter<ProjectTreeItem | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<ProjectTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
   
     refresh(): void {
       this.treeData = this.getTreeData();
@@ -27,14 +28,14 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
       this._onDidChangeTreeData.fire();
     }
   
-    getTreeData(): NodeItem[] {
+    getTreeData(): ProjectTreeItem[] {
       let projectsRoots = vscode.workspace.getConfiguration("projectsBrowser").get("rootFolders") as ProjectsConfig[];
       let projects = [];
       for (var projectConfig of projectsRoots) {
         const {rootFolder, ...configs} = projectConfig;
         console.log(`Retrieving data from folder ${rootFolder}`);
         if (FS.existsSync(rootFolder)) {
-          let repoList: NodeItem[] = [];
+          let repoList: ProjectTreeItem[] = [];
           let nodeTree = readDirData(rootFolder, 0, repoList, configs);
           let prunedNodeTree = pruneTree(
             nodeTree,
@@ -48,11 +49,11 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
       return projects;
     }
   
-    getTreeItem(element: NodeItem): vscode.TreeItem {
+    getTreeItem(element: ProjectTreeItem): vscode.TreeItem {
       return element;
     }
   
-    getChildren(element?: NodeItem): Thenable<NodeItem[]> {
+    getChildren(element?: ProjectTreeItem): Thenable<ProjectTreeItem[]> {
       if (element) {
         return Promise.resolve(element.children);
       } else {
@@ -60,37 +61,17 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
       }
     }
   }
-  
-  export class NodeItem extends vscode.TreeItem {
 
-    constructor(
-      public readonly label: string,
-      public location: string,
-      public isProject: boolean = false,
-      public icon: vscode.Uri | vscode.ThemeIcon,
-      public children: NodeItem[] = []
-    ) {
-      super(label);
-      this.tooltip = `${this.location}`;
-      this.iconPath = this.icon;
-      this.contextValue = this.isProject ? "project" : "folder";
-      this.collapsibleState = this.isProject
-        ? vscode.TreeItemCollapsibleState.None
-        : vscode.TreeItemCollapsibleState.Expanded;
-    }
-
-  }
-  
   function readDirData(
     path: string,
     currentDepth: number = 0,
-    repoList: NodeItem[],
+    repoList: ProjectTreeItem[],
     configs: ProjectsPropertiesConfig
-  ): NodeItem {
+  ): ProjectTreeItem {
     let dirData = safeReadDirSync(path);
     let isProject = isProjectFactory(configs.projectsType || 'git')(dirData, configs);
     let icon = getIcon(configs.customIcons || [], path, isProject);
-    let item = new NodeItem(PATH.basename(path), path, isProject, icon);
+    let item = new ProjectTreeItem(PATH.basename(path), path, isProject, icon);
     if (item.isProject) {
       repoList.push(item);
       if (!configs.recurseAfterFirstHit) {
@@ -119,12 +100,12 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
     }
   }
   
-  function pruneTree(root: NodeItem, nodeNames: string[]): NodeItem | null {
-    function shouldKeepNode(node: NodeItem): boolean {
+  function pruneTree(root: ProjectTreeItem, nodeNames: string[]): ProjectTreeItem | null {
+    function shouldKeepNode(node: ProjectTreeItem): boolean {
       if (!node.children) {
         return false;
       }
-      node.children = node.children.map((child) => pruneTree(child, nodeNames)).filter(Boolean) as NodeItem[];
+      node.children = node.children.map((child) => pruneTree(child, nodeNames)).filter(Boolean) as ProjectTreeItem[];
       if (node.children.length === 0) {
         return nodeNames.includes(node.label);
       }
@@ -137,6 +118,10 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
     switch (projectType) {
       case "git":
         return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => dirData.find((c) => c.name === ".git") !== undefined;
+      case "vscode":
+        return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => dirData.find((c) => c.name === ".vscode") !== undefined;
+      case "idea":
+        return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => dirData.find((c) => c.name === ".idea") !== undefined;
       default:
         throw new Error(`Unknown project type: ${projectType}`);
     }

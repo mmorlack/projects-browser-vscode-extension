@@ -1,6 +1,7 @@
 import * as vscode from "vscode";
-import { NodeItem, ProjectsDataProvider } from "./projectsprovider";
-import { FavoriteProject, ProjectsFavoritesDataProvider } from "./projectsfavoritesprovider";
+import { ProjectsDataProvider } from "./projectsprovider";
+import { ProjectsFavoritesDataProvider } from "./projectsfavoritesprovider";
+import { ProjectTreeItem } from "./common";
 
 export const PROJECT_FAVTORITES_KEY = 'projectsBrowser.favMap';
 
@@ -15,18 +16,17 @@ export function activate(context: vscode.ExtensionContext) {
   const projectsFavoritesDataProvider = new ProjectsFavoritesDataProvider(context);
   vscode.window.registerTreeDataProvider("projectsBrowserFavorites", projectsFavoritesDataProvider);
 
-  vscode.commands.registerCommand("projectsBrowser.openInNewWindow", async (proj: NodeItem) => {
+  vscode.commands.registerCommand("projectsBrowser.openInNewWindow", async (proj: ProjectTreeItem) => {
     if (proj) {
-      await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(proj.location), true);
+      await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(proj.tooltip), true);
     }
   });
 
-  vscode.commands.registerCommand("projectsBrowser.addToFavorites", async (proj: NodeItem) => {
+  vscode.commands.registerCommand("projectsBrowser.addToFavorites", async (proj: ProjectTreeItem) => {
     if (proj) {
       var favMap: Map<string, object> = retrieveMap(context, PROJECT_FAVTORITES_KEY);
-      var favProj = new FavoriteProject(proj.label, proj.location, true, proj.icon);
       if (!favMap.has(proj.label)) {
-        favMap.set(proj.label, favProj);
+        favMap.set(proj.label, proj.toObject());
         storeMap(context, PROJECT_FAVTORITES_KEY, favMap);
         projectsFavoritesDataProvider.refresh(context);
       }
@@ -34,7 +34,7 @@ export function activate(context: vscode.ExtensionContext) {
     }
   });
 
-  vscode.commands.registerCommand("projectsBrowser.clearFavorite", async (proj: FavoriteProject) => {
+  vscode.commands.registerCommand("projectsBrowser.clearFavorite", async (proj: ProjectTreeItem) => {
     var favMap: Map<string, object> = retrieveMap(context, PROJECT_FAVTORITES_KEY);
     favMap.delete(proj.label);
     storeMap(context, PROJECT_FAVTORITES_KEY, favMap);
