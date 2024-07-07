@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
-import { ProjectTreeItemObject } from "./interfaces";
+import * as fs from "fs";
+import { CustomIcons, ProjectTreeItemObject } from "./interfaces";
+
+const extSettings = vscode.workspace.getConfiguration("projectsBrowser");
 
 export class ProjectTreeItem extends vscode.TreeItem {
 
@@ -7,27 +10,28 @@ export class ProjectTreeItem extends vscode.TreeItem {
         public readonly label: string,
         public tooltip: string,
         public isProject: boolean = false,
-        public icon: vscode.Uri | vscode.ThemeIcon,
+        public iconConfigs: CustomIcons[] = [],
         public children: ProjectTreeItem[] = []
     ) {
         super(label);
         this.tooltip = `${this.tooltip}`;
-        this.iconPath = this.icon;
+        this.iconPath = this.setIcon(this.iconConfigs);
         this.contextValue = this.isProject ? "project" : "folder";
         this.collapsibleState = this.isProject
             ? vscode.TreeItemCollapsibleState.None
             : vscode.TreeItemCollapsibleState.Expanded;
     }
 
-    static fromObject(obj: ProjectTreeItemObject) {
-        return new this(
+    static fromObject(obj: ProjectTreeItemObject): ProjectTreeItem {
+        var instance = new this(
             obj.label,
             obj.tooltip,
-            obj.isProject,
-            obj.icon.isCodicon ? 
-            new vscode.ThemeIcon(obj.icon.path) : 
-            vscode.Uri.parse(obj.icon.path)
+            obj.isProject
         );
+        instance.iconPath = obj.icon.isCodicon ?
+            new vscode.ThemeIcon(obj.icon.path) :
+            vscode.Uri.parse(obj.icon.path);
+        return instance;
     }
 
     toObject(): ProjectTreeItemObject {
@@ -36,12 +40,32 @@ export class ProjectTreeItem extends vscode.TreeItem {
             tooltip: this.tooltip,
             isProject: this.isProject,
             icon: {
-                isCodicon: this.icon instanceof vscode.ThemeIcon,
-                path: this.icon instanceof vscode.ThemeIcon ?
-                    this.icon.id :
-                    this.icon.path
+                isCodicon: this.iconPath instanceof vscode.ThemeIcon,
+                path: 
+                //TODO: fix this logic
+                this.iconPath instanceof vscode.ThemeIcon ?
+                    this.iconPath.id :
+                        this.iconPath instanceof vscode.Uri ? this.iconPath.path : ''
             }
         };
+    }
+
+    setIcon(iconConfigs: CustomIcons[]) {
+        function _getIcon(icon: string): vscode.Uri | vscode.ThemeIcon {
+            return fs.existsSync(icon) ? vscode.Uri.parse(icon) : new vscode.ThemeIcon(icon);
+        }
+        
+        let pathType = this.isProject ? 'project' : 'folder';
+            for (const iconConfig of iconConfigs){
+                const regex = new RegExp(iconConfig.matcher);
+                if (regex.test(this.tooltip) && pathType === iconConfig.applysTo) {
+                    return _getIcon(iconConfig.icon);
+            }
+        }
+        //const extSettings = vscode.workspace.getConfiguration("projectsBrowser");
+        return this.isProject ?
+            _getIcon(extSettings.get('defaultProjectIcon', 'git-branch')) :
+            _getIcon(extSettings.get('defaultFolderIcon', 'folder'));
     }
 
 }

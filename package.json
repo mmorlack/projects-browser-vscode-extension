@@ -17,6 +17,14 @@
     "configuration": {
       "title": "Projects Browser",
       "properties": {
+        "projectsBrowser.defaultProjectIcon": {
+          "type": "string",
+          "default": "git-branch"
+        },
+        "projectsBrowser.defaultFolderIcon": {
+          "type": "string",
+          "default": "folder"
+        },
         "projectsBrowser.rootFolders": {
           "type": "array",
           "default": [],

@@ -70,8 +70,8 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<ProjectTree
   ): ProjectTreeItem {
     let dirData = safeReadDirSync(path);
     let isProject = isProjectFactory(configs.projectsType || 'git')(dirData, configs);
-    let icon = getIcon(configs.customIcons || [], path, isProject);
-    let item = new ProjectTreeItem(PATH.basename(path), path, isProject, icon);
+    //let icon = getIcon(configs.customIcons || [], path, isProject);
+    let item = new ProjectTreeItem(PATH.basename(path), path, isProject, configs.customIcons || []);
     if (item.isProject) {
       repoList.push(item);
       if (!configs.recurseAfterFirstHit) {
@@ -117,33 +117,15 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<ProjectTree
   function isProjectFactory(projectType: string) {
     switch (projectType) {
       case "git":
-        return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => dirData.find((c) => c.name === ".git") !== undefined;
+        return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => 
+          dirData.find((c) => c.name === ".git") !== undefined;
       case "vscode":
-        return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => dirData.find((c) => c.name === ".vscode") !== undefined;
+        return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => 
+          dirData.find((c) => c.name === ".vscode") !== undefined;
       case "idea":
-        return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => dirData.find((c) => c.name === ".idea") !== undefined;
+        return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => 
+          dirData.find((c) => c.name === ".idea") !== undefined;
       default:
         throw new Error(`Unknown project type: ${projectType}`);
     }
-  }
-  
-  function getIcon(iconConfigs: CustomIcons[], path: string, isProject: boolean): vscode.Uri | vscode.ThemeIcon {
-  
-    function _getIcon(icon: string): vscode.Uri | vscode.ThemeIcon {
-      return FS.existsSync(icon) ? vscode.Uri.parse(icon) : new vscode.ThemeIcon(icon);
-    }
-  
-    let pathType = isProject ? 'project' : 'folder';
-    for (const iconConfig of iconConfigs){
-      const regex = new RegExp(iconConfig.matcher);
-      if (regex.test(path) && pathType === iconConfig.applysTo) {
-        return _getIcon(iconConfig.icon);
-      }
-    }
-    // defaults
-    // TODO: move this to settings
-    if (isProject) {
-      return _getIcon('git-branch');
-    }
-    return _getIcon('folder');
   }
