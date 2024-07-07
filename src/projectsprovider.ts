@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import * as FS from "fs";
+import * as fs from "fs";
 import * as PATH from "path";
 import { CustomIcons, ProjectsConfig, ProjectsPropertiesConfig } from "./interfaces";
 import { ProjectTreeItem } from "./common";
@@ -34,7 +34,7 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<ProjectTree
       for (var projectConfig of projectsRoots) {
         const {rootFolder, ...configs} = projectConfig;
         console.log(`Retrieving data from folder ${rootFolder}`);
-        if (FS.existsSync(rootFolder)) {
+        if (fs.existsSync(rootFolder)) {
           let repoList: ProjectTreeItem[] = [];
           let nodeTree = readDirData(rootFolder, 0, repoList, configs);
           let prunedNodeTree = pruneTree(
@@ -86,9 +86,9 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<ProjectTree
     return item;
   }
   
-  function safeReadDirSync(path: string): FS.Dirent[] {
+  function safeReadDirSync(path: string): fs.Dirent[] {
     try {
-      let dirData = FS.readdirSync(path, { withFileTypes: true }).filter((i) => i.isDirectory());
+      let dirData = fs.readdirSync(path, { withFileTypes: true }).filter((i) => i.isDirectory());
       return dirData;
     } catch (ex: any) {
       if (ex.code === "EACCES" || ex.code === "EPERM") {
@@ -117,13 +117,13 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<ProjectTree
   function isProjectFactory(projectType: string) {
     switch (projectType) {
       case "git":
-        return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => 
+        return (dirData: fs.Dirent[], configs: ProjectsPropertiesConfig): boolean => 
           dirData.find((c) => c.name === ".git") !== undefined;
       case "vscode":
-        return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => 
+        return (dirData: fs.Dirent[], configs: ProjectsPropertiesConfig): boolean => 
           dirData.find((c) => c.name === ".vscode") !== undefined;
       case "idea":
-        return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => 
+        return (dirData: fs.Dirent[], configs: ProjectsPropertiesConfig): boolean => 
           dirData.find((c) => c.name === ".idea") !== undefined;
       default:
         throw new Error(`Unknown project type: ${projectType}`);

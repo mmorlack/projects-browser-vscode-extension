@@ -2,11 +2,15 @@ import * as vscode from "vscode";
 import { ProjectsDataProvider } from "./projectsprovider";
 import { ProjectsFavoritesDataProvider } from "./projectsfavoritesprovider";
 import { ProjectTreeItem } from "./common";
+import { openProject } from "./utils";
 
 export const PROJECT_FAVTORITES_KEY = 'projectsBrowser.favMap';
 
+
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
+
+
   console.log("Extension project-browser active");
   context.globalState.update(PROJECT_FAVTORITES_KEY, undefined);
 
@@ -18,9 +22,25 @@ export function activate(context: vscode.ExtensionContext) {
 
   vscode.commands.registerCommand("projectsBrowser.openInNewWindow", async (proj: ProjectTreeItem) => {
     if (proj) {
-      await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(proj.tooltip), true);
+      await openProject(proj.tooltip, true);
     }
   });
+
+  vscode.commands.registerCommand("projectsBrowser.openInCurrentWindow", async (proj: ProjectTreeItem) => {
+    if (proj) {
+      const configs = vscode.workspace.getConfiguration("projectsBrowser");
+      configs.get('promptOpenConfirmation', 'yes') === 'yes' ? 
+        vscode.window
+        .showInformationMessage("Open project in current window?", "Yes", "No")
+        .then(async answer => {
+          if (answer === "Yes") {
+            await openProject(proj.tooltip, false);
+          }
+        }) :
+        await openProject(proj.tooltip, false);
+    }
+  });
+
 
   vscode.commands.registerCommand("projectsBrowser.addToFavorites", async (proj: ProjectTreeItem) => {
     if (proj) {

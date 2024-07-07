@@ -2,7 +2,6 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import { CustomIcons, ProjectTreeItemObject } from "./interfaces";
 
-const extSettings = vscode.workspace.getConfiguration("projectsBrowser");
 
 export class ProjectTreeItem extends vscode.TreeItem {
 
@@ -20,6 +19,13 @@ export class ProjectTreeItem extends vscode.TreeItem {
         this.collapsibleState = this.isProject
             ? vscode.TreeItemCollapsibleState.None
             : vscode.TreeItemCollapsibleState.Expanded;
+        this.command = !this.isProject ? 
+            undefined :
+            {
+                title: 'vscode.open',
+                command: 'projectsBrowser.openInCurrentWindow',
+                arguments: [this],
+            };
     }
 
     static fromObject(obj: ProjectTreeItemObject): ProjectTreeItem {
@@ -51,6 +57,8 @@ export class ProjectTreeItem extends vscode.TreeItem {
     }
 
     setIcon(iconConfigs: CustomIcons[]) {
+        const configs = vscode.workspace.getConfiguration("projectsBrowser");
+
         function _getIcon(icon: string): vscode.Uri | vscode.ThemeIcon {
             return fs.existsSync(icon) ? vscode.Uri.parse(icon) : new vscode.ThemeIcon(icon);
         }
@@ -64,8 +72,8 @@ export class ProjectTreeItem extends vscode.TreeItem {
         }
         //const extSettings = vscode.workspace.getConfiguration("projectsBrowser");
         return this.isProject ?
-            _getIcon(extSettings.get('defaultProjectIcon', 'git-branch')) :
-            _getIcon(extSettings.get('defaultFolderIcon', 'folder'));
+            _getIcon(configs.get('defaultProjectIcon', 'git-branch')) :
+            _getIcon(configs.get('defaultFolderIcon', 'folder'));
     }
 
 }

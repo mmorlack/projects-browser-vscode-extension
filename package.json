@@ -25,6 +25,18 @@
           "type": "string",
           "default": "folder"
         },
+        "projectsBrowser.promptOpenConfirmation": {
+          "type": "string",
+          "default": "yes",
+          "enum": [
+            "yes",
+            "no"
+          ],
+          "enumItemLabels": [
+            "Yes",
+            "No"
+          ]
+        },
         "projectsBrowser.rootFolders": {
           "type": "array",
           "default": [],
@@ -93,6 +105,10 @@
         "icon": "$(link-external)"
       },
       {
+        "command": "projectsBrowser.openInCurrentWindow",
+        "title": "Open in current Window"
+      },
+      {
         "command": "projectsBrowser.addToFavorites",
         "title": "Add to favorites",
         "icon": "$(heart)"
@@ -144,12 +160,13 @@
         {
           "command": "projectsBrowser.openInNewWindow",
           "when": "(view == 'projectsBrowser' || view == 'projectsBrowserFavorites') && viewItem == 'project'",
-          "group": "inline"
+          "group": "inline",
+          "alt": ""
         },
         {
           "command": "projectsBrowser.addToFavorites",
           "when": "view == 'projectsBrowser' && viewItem == 'project'",
-          "group": "inline"
+          "group": "navigation"
         },
         {
           "command": "projectsBrowser.clearFavorite",
