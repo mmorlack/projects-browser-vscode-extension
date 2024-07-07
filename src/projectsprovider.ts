@@ -35,11 +35,11 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<ProjectTree
         const {rootFolder, ...configs} = projectConfig;
         console.log(`Retrieving data from folder ${rootFolder}`);
         if (fs.existsSync(rootFolder)) {
-          let repoList: ProjectTreeItem[] = [];
-          let nodeTree = readDirData(rootFolder, 0, repoList, configs);
+          let projectList: ProjectTreeItem[] = [];
+          let nodeTree = readDirData(rootFolder, 0, projectList, configs);
           let prunedNodeTree = pruneTree(
             nodeTree,
-            repoList.map((r) => r.label)
+            projectList.map((r) => r.label)
           );
           if (prunedNodeTree) {
             projects.push(prunedNodeTree);
@@ -65,7 +65,7 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<ProjectTree
   function readDirData(
     path: string,
     currentDepth: number = 0,
-    repoList: ProjectTreeItem[],
+    projectList: ProjectTreeItem[],
     configs: ProjectsPropertiesConfig
   ): ProjectTreeItem {
     let dirData = safeReadDirSync(path);
@@ -73,14 +73,14 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<ProjectTree
     //let icon = getIcon(configs.customIcons || [], path, isProject);
     let item = new ProjectTreeItem(PATH.basename(path), path, isProject, configs.customIcons || []);
     if (item.isProject) {
-      repoList.push(item);
+      projectList.push(item);
       if (!configs.recurseAfterFirstHit) {
         return item;
       }
     }
     if ((configs.maxDepth || 4) > currentDepth + 1) {
       item.children = dirData.map((child) =>
-        readDirData(PATH.join(child.path, child.name), currentDepth + 1, repoList, configs)
+        readDirData(PATH.join(child.path, child.name), currentDepth + 1, projectList, configs)
       );
     }
     return item;
