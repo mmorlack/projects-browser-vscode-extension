@@ -26,16 +26,8 @@
           "default": "folder"
         },
         "projectsBrowser.promptOpenConfirmation": {
-          "type": "string",
-          "default": "yes",
-          "enum": [
-            "yes",
-            "no"
-          ],
-          "enumItemLabels": [
-            "Yes",
-            "No"
-          ]
+          "type": "boolean",
+          "default": true
         },
         "projectsBrowser.rootFolders": {
           "type": "array",

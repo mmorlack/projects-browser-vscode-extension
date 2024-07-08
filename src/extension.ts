@@ -29,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand("projectsBrowser.openInCurrentWindow", async (proj: ProjectTreeItem) => {
     if (proj) {
       const configs = vscode.workspace.getConfiguration("projectsBrowser");
-      configs.get('promptOpenConfirmation', 'yes') === 'yes' ? 
+      configs.get('promptOpenConfirmation', true) ? 
         vscode.window
         .showInformationMessage("Open project in current window?", "Yes", "No")
         .then(async answer => {
