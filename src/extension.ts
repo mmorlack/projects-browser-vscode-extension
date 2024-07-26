@@ -12,7 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 
   console.log("Extension project-browser active");
-  context.globalState.update(PROJECT_FAVTORITES_KEY, undefined);
+  //context.globalState.update(PROJECT_FAVTORITES_KEY, undefined);
 
   const projectsDataProvider = new ProjectsDataProvider();
   vscode.window.registerTreeDataProvider("projectsBrowser", projectsDataProvider);

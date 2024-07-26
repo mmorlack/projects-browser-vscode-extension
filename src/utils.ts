@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
-import { ProjectsPropertiesConfig } from "./interfaces";
+import { CustomIcons, ProjectsPropertiesConfig } from "./interfaces";
 import { ProjectTreeItem } from "./common";
 import * as PATH from "path";
 
@@ -33,7 +33,8 @@ export function readDirData(
   ): ProjectTreeItem {
     let dirData = safeReadDirSync(path);
     let isProject = isProjectFactory(configs.projectsType || 'git')(dirData, configs);
-    let item = new ProjectTreeItem(PATH.basename(path), path, isProject, configs.customIcons || []);
+    let iconPath = getIcon(path,  configs.customIcons || [], isProject);
+    let item = new ProjectTreeItem(PATH.basename(path), path, isProject, iconPath);
     if (item.isProject) {
       projectList.push(item);
       if (!configs.recurseAfterFirstHit) {
@@ -74,4 +75,24 @@ export function pruneTree(root: ProjectTreeItem, nodeNames: string[]): ProjectTr
         return true;
     }
     return shouldKeepNode(root) ? root : null;
+}
+
+export function getIcon(path: string, iconConfigs: CustomIcons[], isProject: boolean) {
+  const configs = vscode.workspace.getConfiguration("projectsBrowser");
+
+  function _getIcon(icon: string): vscode.Uri | vscode.ThemeIcon {
+      return fs.existsSync(icon) ? vscode.Uri.parse(icon) : new vscode.ThemeIcon(icon);
+  }
+  
+  let pathType = isProject ? 'project' : 'folder';
+      for (const iconConfig of iconConfigs){
+          const regex = new RegExp(iconConfig.matcher);
+          if (regex.test(path) && pathType === iconConfig.applysTo) {
+              return _getIcon(iconConfig.icon);
+      }
+  }
+  //const extSettings = vscode.workspace.getConfiguration("projectsBrowser");
+  return isProject ?
+      _getIcon(configs.get('defaultProjectIcon', 'git-branch')) :
+      _getIcon(configs.get('defaultFolderIcon', 'folder'));
 }
