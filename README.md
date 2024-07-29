@@ -1,71 +1,61 @@
-# projects-browser README
+# Projects Browser
 
-This is the README for your extension "projects-browser". After writing up a brief description, we recommend including the following sections.
+VS Code extension to show all your projects in a dedicated side bar. Inspired from:
+
+- [Repositories](https://marketplace.visualstudio.com/items?itemName=mohitsingh.repo)
+- [Project Manager](https://marketplace.visualstudio.com/items?itemName=alefragnani.project-manager)
 
 ## Features
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+- Define via [settings](#extension-settings) a list of folders to scan for projects
+- Supports [different](#supported-projects-types) type of projects
+- Display found projects in a tree view
+- Customize the icons used to display folders and projects
+- Add selected projects to a dedicated favorites subview
+- Open projects in current window or new window
 
-For example if there is an image subfolder under your extension project workspace:
+## Supported projects types
 
-\!\[feature X\]\(images/feature-x.png\)
-
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
-
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+- Git: identified by presence of `.git` folder inside project folder
+- VS Code: identified by presence of `.vscode` folder inside project folder
+- Idea: identified by presence of `.idea` folder inside project folder
 
 ## Extension Settings
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
+| Command                                  | Description                                                                                    | Default Value        |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------- |
+| `projectsBrowser.defaultProjectIcon`     | Default icon to use for projects                                                               | Codicon `git-branch` |
+| `projectsBrowser.defaultFolderIcon`      | Default icon to use for folders                                                                | Codicon `folder`     |
+| `projectsBrowser.promptOpenConfirmation` | Confermation pop up when opening in current window                                             | `true`               |
+| `projectsBrowser.rootFolders`            | Configuration Json for folders in which to look for projects, see section for complete example | `[]`                 |
 
-For example:
+### Projects Folders
 
-This extension contributes the following settings:
+Projects folders need to be configured via `settings.json` and have the following structure:
 
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
+```json
+{
+    "projectsBrowser.rootFolders": [
+        {
+            "rootFolder": "path/to/projects/root",
+            "recurseAfterFirstHit": false,
+            "maxDepth": 1,
+            "projectsType": "git|vscode|idea",
+            "customIcons": [
+                {
+                    "matcher": "regex to match, applys to full path",
+                    "icon": "icon codicon name or path to custom icon",
+                    "applysTo": "folder|project"
+                }
+            ]
 
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
+        }
+    ]
+}
+```
 
 ## Release Notes
 
-Users appreciate release notes as you update your extension.
+### 0.0.1
 
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Initial release

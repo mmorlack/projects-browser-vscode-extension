@@ -3,6 +3,7 @@
   "displayName": "Projects Browser",
   "description": "",
   "version": "0.0.1",
+  "publisher": "matteo-morlack",
   "engines": {
     "vscode": "^1.87.0"
   },
@@ -10,12 +11,25 @@
     "Other"
   ],
   "activationEvents": [
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
       "title": "Projects Browser",
       "properties": {
+        "projectsBrowser.defaultProjectIcon": {
+          "type": "string",
+          "default": "git-branch"
+        },
+        "projectsBrowser.defaultFolderIcon": {
+          "type": "string",
+          "default": "folder"
+        },
+        "projectsBrowser.promptOpenConfirmation": {
+          "type": "boolean",
+          "default": true
+        },
         "projectsBrowser.rootFolders": {
           "type": "array",
           "default": [],
@@ -24,13 +38,13 @@
             "additionalProperties": false,
             "properties": {
               "rootFolder": {
-                  "type": "string",
-                  "description": "Root folder to search repositories"
+                "type": "string",
+                "description": "Root folder to search repositories"
               },
               "recurseAfterFirstHit": {
-                  "type": "boolean",
-                  "description": "Wheter to recurse into folders after finding a project",
-                  "default": false
+                "type": "boolean",
+                "description": "Wheter to recurse into folders after finding a project",
+                "default": false
               },
               "maxDepth": {
                 "type": "number",
@@ -42,11 +56,13 @@
                 "default": "git",
                 "description": "Type of projects to search under rootFolder",
                 "enum": [
-                  "git"
+                  "git",
+                  "vscode",
+                  "idea"
                 ]
               },
               "customIcons": {
-                "type":"array",
+                "type": "array",
                 "default": [],
                 "items": {
                   "type": "object",
@@ -63,7 +79,8 @@
                       "type": "string",
                       "description": "Wheter matcher should apply to folders or projects",
                       "enum": [
-                        "folder", "project"
+                        "folder",
+                        "project"
                       ]
                     }
                   }
@@ -81,6 +98,25 @@
         "icon": "$(link-external)"
       },
       {
+        "command": "projectsBrowser.openInCurrentWindow",
+        "title": "Open in current Window"
+      },
+      {
+        "command": "projectsBrowser.addToFavorites",
+        "title": "Add to favorites",
+        "icon": "$(heart)"
+      },
+      {
+        "command": "projectsBrowser.clearFavorites",
+        "title": "Remove all favorites",
+        "icon": "$(clear-all)"
+      },
+      {
+        "command": "projectsBrowser.clearFavorite",
+        "title": "Remove from favorites",
+        "icon": "$(trash)"
+      },
+      {
         "command": "projectsBrowser.refresh",
         "title": "Reload projects",
         "icon": "$(refresh)"
@@ -96,7 +132,7 @@
         {
           "id": "projects-browser",
           "title": "Projects Browser",
-          "icon": "$(folder-library)"
+          "icon": "$(repo)"
         }
       ]
     },
@@ -104,7 +140,11 @@
       "projects-browser": [
         {
           "id": "projectsBrowser",
-          "name": "Projects Browser"
+          "name": "Projects"
+        },
+        {
+          "id": "projectsBrowserFavorites",
+          "name": "Favorites"
         }
       ]
     },
@@ -112,19 +152,35 @@
       "view/item/context": [
         {
           "command": "projectsBrowser.openInNewWindow",
-          "when": "view == projectsBrowser && viewItem == 'project'",
-          "group": "inline"
+          "when": "(view == 'projectsBrowser' || view == 'projectsBrowserFavorites') && viewItem == 'project'",
+          "group": "inline",
+          "alt": ""
+        },
+        {
+          "command": "projectsBrowser.addToFavorites",
+          "when": "view == 'projectsBrowser' && viewItem == 'project'",
+          "group": "navigation"
+        },
+        {
+          "command": "projectsBrowser.clearFavorite",
+          "when": "view == projectsBrowserFavorites  && viewItem == 'project'",
+          "group": "navigation"
         }
       ],
       "view/title": [
         {
-            "command": "projectsBrowser.refresh",
-            "when": "view == projectsBrowser",
-            "group": "navigation"
+          "command": "projectsBrowser.refresh",
+          "when": "view == projectsBrowser",
+          "group": "navigation"
         },
         {
           "command": "projectsBrowser.filter",
           "when": "view == projectsBrowser",
+          "group": "navigation"
+        },
+        {
+          "command": "projectsBrowser.clearFavorites",
+          "when": "view == projectsBrowserFavorites",
           "group": "navigation"
         }
       ]

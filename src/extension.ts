@@ -1,36 +1,71 @@
 import * as vscode from "vscode";
-import * as FS from "fs";
-import * as PATH from "path";
+import { ProjectsDataProvider } from "./projectsprovider";
+import { ProjectsFavoritesDataProvider } from "./projectsfavoritesprovider";
+import { ProjectTreeItem } from "./common";
+import { openProject } from "./utils";
 
-interface ProjectsPropertiesConfig {
-  maxDepth?: number; 
-  customIcons?: CustomIcons[]; 
-  recurseAfterFirstHit?: boolean 
-  projectsType?: string
-}
+export const PROJECT_FAVTORITES_KEY = 'projectsBrowser.favMap';
 
-interface CustomIcons {
-  matcher: string;
-  icon: string;
-  applysTo: string;
-}
-
-interface ProjectsConfig extends ProjectsPropertiesConfig {
-  rootFolder: string;
-}
 
 // This method is called when your extension is activated
 export function activate(context: vscode.ExtensionContext) {
-  console.log("Extension project-browser active");
 
-  vscode.commands.registerCommand("projectsBrowser.openInNewWindow", async (repo: NodeItem) => {
-    if (repo) {
-      await vscode.commands.executeCommand("vscode.openFolder", vscode.Uri.file(repo.location), true);
-    }
-  });
+
+  console.log("Extension project-browser active");
+  //context.globalState.update(PROJECT_FAVTORITES_KEY, undefined);
 
   const projectsDataProvider = new ProjectsDataProvider();
   vscode.window.registerTreeDataProvider("projectsBrowser", projectsDataProvider);
+
+  const projectsFavoritesDataProvider = new ProjectsFavoritesDataProvider(context);
+  vscode.window.registerTreeDataProvider("projectsBrowserFavorites", projectsFavoritesDataProvider);
+
+  vscode.commands.registerCommand("projectsBrowser.openInNewWindow", async (proj: ProjectTreeItem) => {
+    if (proj) {
+      await openProject(proj.tooltip, true);
+    }
+  });
+
+  vscode.commands.registerCommand("projectsBrowser.openInCurrentWindow", async (proj: ProjectTreeItem) => {
+    if (proj) {
+      const configs = vscode.workspace.getConfiguration("projectsBrowser");
+      configs.get('promptOpenConfirmation', true) ? 
+        vscode.window
+        .showInformationMessage("Open project in current window?", "Yes", "No")
+        .then(async answer => {
+          if (answer === "Yes") {
+            await openProject(proj.tooltip, false);
+          }
+        }) :
+        await openProject(proj.tooltip, false);
+    }
+  });
+
+
+  vscode.commands.registerCommand("projectsBrowser.addToFavorites", async (proj: ProjectTreeItem) => {
+    if (proj) {
+      var favMap: Map<string, object> = retrieveMap(context, PROJECT_FAVTORITES_KEY);
+      if (!favMap.has(proj.label)) {
+        favMap.set(proj.label, proj.toObject());
+        storeMap(context, PROJECT_FAVTORITES_KEY, favMap);
+        projectsFavoritesDataProvider.refresh(context);
+      }
+      console.log(retrieveMap(context, PROJECT_FAVTORITES_KEY));
+    }
+  });
+
+  vscode.commands.registerCommand("projectsBrowser.clearFavorite", async (proj: ProjectTreeItem) => {
+    var favMap: Map<string, object> = retrieveMap(context, PROJECT_FAVTORITES_KEY);
+    favMap.delete(proj.label);
+    storeMap(context, PROJECT_FAVTORITES_KEY, favMap);
+    console.log(retrieveMap(context, PROJECT_FAVTORITES_KEY));
+    projectsFavoritesDataProvider.refresh(context);
+  });
+
+  vscode.commands.registerCommand("projectsBrowser.clearFavorites", () => {
+    context.globalState.update(PROJECT_FAVTORITES_KEY, undefined);
+    projectsFavoritesDataProvider.refresh(context);
+  });
 
   vscode.commands.registerCommand("projectsBrowser.refresh", () => projectsDataProvider.refresh());
 
@@ -42,156 +77,16 @@ export function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export function deactivate() {}
 
-export class ProjectsDataProvider implements vscode.TreeDataProvider<NodeItem> {
-  private treeData: NodeItem[];
-
-  constructor() {
-    this.treeData = this.getTreeData();
+export function retrieveMap(context: vscode.ExtensionContext, key: string): Map<string, any> {
+  const mapJson = context.globalState.get<string>(key);
+  if (mapJson) {
+    const mapArray: [string, any][] = JSON.parse(mapJson);
+    return new Map(mapArray);
   }
-
-  private _onDidChangeTreeData: vscode.EventEmitter<NodeItem | undefined | null | void> = new vscode.EventEmitter<
-    NodeItem | undefined | null | void
-  >();
-  readonly onDidChangeTreeData: vscode.Event<NodeItem | undefined | null | void> = this._onDidChangeTreeData.event;
-
-  refresh(): void {
-    this.treeData = this.getTreeData();
-    this._onDidChangeTreeData.fire();
-  }
-
-  filter(query: string | undefined) {
-    if (query) {
-      let filteredNodeTree = pruneTree(this.treeData[0], [query]);
-      this.treeData = filteredNodeTree ? [filteredNodeTree] : [];
-    }
-    this._onDidChangeTreeData.fire();
-  }
-
-  getTreeData(): NodeItem[] {
-    let projectsRoots = vscode.workspace.getConfiguration("projectsBrowser").get("rootFolders") as ProjectsConfig[];
-    let projects = [];
-    for (var projectConfig of projectsRoots) {
-      const {rootFolder, ...configs} = projectConfig;
-      console.log(`Retrieving data from folder ${rootFolder}`);
-      if (FS.existsSync(rootFolder)) {
-        let repoList: NodeItem[] = [];
-        let nodeTree = readDirData(rootFolder, 0, repoList, configs);
-        let prunedNodeTree = pruneTree(
-          nodeTree,
-          repoList.map((r) => r.label)
-        );
-        if (prunedNodeTree) {
-          projects.push(prunedNodeTree);
-        }
-      }
-    }
-    return projects;
-  }
-
-  getTreeItem(element: NodeItem): vscode.TreeItem {
-    return element;
-  }
-
-  getChildren(element?: NodeItem): Thenable<NodeItem[]> {
-    if (element) {
-      return Promise.resolve(element.children);
-    } else {
-      return Promise.resolve(this.treeData);
-    }
-  }
+  return new Map();
 }
 
-class NodeItem extends vscode.TreeItem {
-  constructor(
-    public readonly label: string,
-    public location: string,
-    public isProject: boolean = false,
-    public icon: string = "folder",
-    public children: NodeItem[] = []
-  ) {
-    super(label);
-    this.tooltip = `${this.location}`;
-    this.iconPath = new vscode.ThemeIcon(this.icon);
-    this.contextValue = this.isProject ? "project" : "folder";
-    this.collapsibleState = this.isProject
-      ? vscode.TreeItemCollapsibleState.None
-      : vscode.TreeItemCollapsibleState.Expanded;
-  }
-}
-
-function readDirData(
-  path: string,
-  currentDepth: number = 0,
-  repoList: NodeItem[],
-  configs: ProjectsPropertiesConfig
-): NodeItem {
-  let dirData = safeReadDirSync(path);
-  let isProject = isProjectFactory(configs.projectsType || 'git')(dirData, configs);
-  let icon = getIcon(configs.customIcons || [], path, isProject);
-  let item = new NodeItem(PATH.basename(path), path, isProject, icon);
-  if (item.isProject) {
-    repoList.push(item);
-    if (!configs.recurseAfterFirstHit) {
-      return item;
-    }
-  }
-  if ((configs.maxDepth || 4) > currentDepth + 1) {
-    item.children = dirData.map((child) =>
-      readDirData(PATH.join(child.path, child.name), currentDepth + 1, repoList, configs)
-    );
-  }
-  return item;
-}
-
-function safeReadDirSync(path: string): FS.Dirent[] {
-  try {
-    let dirData = FS.readdirSync(path, { withFileTypes: true }).filter((i) => i.isDirectory());
-    return dirData;
-  } catch (ex: any) {
-    if (ex.code === "EACCES" || ex.code === "EPERM") {
-      //User does not have permissions, ignore directory
-      return [];
-    } else {
-      throw ex;
-    }
-  }
-}
-
-function pruneTree(root: NodeItem, nodeNames: string[]): NodeItem | null {
-  function shouldKeepNode(node: NodeItem): boolean {
-    if (!node.children) {
-      return false;
-    }
-    node.children = node.children.map((child) => pruneTree(child, nodeNames)).filter(Boolean) as NodeItem[];
-    if (node.children.length === 0) {
-      return nodeNames.includes(node.label);
-    }
-    return true;
-  }
-  return shouldKeepNode(root) ? root : null;
-}
-
-function isProjectFactory(projectType: string) {
-  switch (projectType) {
-    case "git":
-      return (dirData: FS.Dirent[], configs: ProjectsPropertiesConfig): boolean => dirData.find((c) => c.name === ".git") !== undefined;
-    default:
-      throw new Error(`Unknown project type: ${projectType}`);
-  }
-}
-
-function getIcon(iconConfigs: CustomIcons[], path: string, isProject: boolean): string {
-  let pathType = isProject ? 'project' : 'folder';
-  for (const iconConfig of iconConfigs){
-    const regex = new RegExp(iconConfig.matcher);
-    if (regex.test(path) && pathType === iconConfig.applysTo) {
-      return iconConfig.icon;
-    }
-  }
-  // defaults
-  // TODO: move this to settings
-  if (isProject) {
-    return 'git-branch';
-  }
-  return 'folder';
+export function storeMap(context: vscode.ExtensionContext, key: string, map: Map<string, any>): void {
+  const mapArray = Array.from(map.entries());
+  context.globalState.update(key, JSON.stringify(mapArray));
 }
