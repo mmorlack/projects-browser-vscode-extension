@@ -56,6 +56,6 @@ Projects folders need to be configured via `settings.json` and have the followin
 
 ## Release Notes
 
-### 1.0.0
+### 0.0.1
 
 Initial release

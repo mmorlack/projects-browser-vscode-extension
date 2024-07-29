@@ -3,6 +3,7 @@
   "displayName": "Projects Browser",
   "description": "",
   "version": "0.0.1",
+  "publisher": "matteo-morlack",
   "engines": {
     "vscode": "^1.87.0"
   },
