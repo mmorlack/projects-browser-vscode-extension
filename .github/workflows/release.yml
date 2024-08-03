@@ -29,33 +29,37 @@ jobs:
       if: runner.os == 'Linux'
     - run: npm test
       if: runner.os != 'Linux'
-    - name: Package
+    - run: |
+        git status -s 
       if: success() && matrix.os == 'ubuntu-latest'
-      run: |
-        npm run package ${RELEASE_TYPE}
-        echo "packageFile=$(ls *.vsix)" >> $GITHUB_ENV
-      env:
-        RELEASE_TYPE:  ${{ inputs.releaseType }}
-    - name: Publish
-      if: success() && matrix.os == 'ubuntu-latest'
-      run: |
-        npm run publish -i ${VSIX_PATH}
-      env:
-        VSCE_PAT: ${{ secrets.VSCE_PAT }}
-        VSIX_PATH: ${{ env.packageFile }}
-    - name: Push tag
-      if: success() && matrix.os == 'ubuntu-latest'
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
-        git push --tags
-    - name: Release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      uses: softprops/action-gh-release@v2
-      if: success() && matrix.os == 'ubuntu-latest'
-      with:
-        files: |
-          ${{ env.packageFile }}
+
+    # - name: Package
+    #   if: success() && matrix.os == 'ubuntu-latest'
+    #   run: |
+    #     npm run package ${RELEASE_TYPE}
+    #     echo "packageFile=$(ls *.vsix)" >> $GITHUB_ENV
+    #   env:
+    #     RELEASE_TYPE:  ${{ inputs.releaseType }}
+    # - name: Publish
+    #   if: success() && matrix.os == 'ubuntu-latest'
+    #   run: |
+    #     npm run publish -i ${VSIX_PATH}
+    #   env:
+    #     VSCE_PAT: ${{ secrets.VSCE_PAT }}
+    #     VSIX_PATH: ${{ env.packageFile }}
+    # - name: Push tag
+    #   if: success() && matrix.os == 'ubuntu-latest'
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   run: |
+    #     git config user.name "GitHub Actions"
+    #     git config user.email "actions@github.com"
+    #     git push --tags
+    # - name: Release
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #   uses: softprops/action-gh-release@v2
+    #   if: success() && matrix.os == 'ubuntu-latest'
+    #   with:
+    #     files: |
+    #       ${{ env.packageFile }}
