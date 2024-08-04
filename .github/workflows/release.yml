@@ -50,13 +50,13 @@ jobs:
       env:
         VSCE_PAT: ${{ secrets.VSCE_PAT }}
         VSIX_PATH: ${{ env.packageFile }}
-    - name: Push tag and back merge
+    - name: Push tag
       if: success() && matrix.os == 'ubuntu-latest'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TAG_VERSION: ${{ env.version }}
       run: |
-        git merge ${TAG_VERSION}
+        git push
         git push --tags
     - name: Release
       env:
