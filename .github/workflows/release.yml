@@ -56,7 +56,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         TAG_VERSION: ${{ env.version }}
       run: |
-        git merge $TAG_VERSION
+        git merge ${TAG_VERSION}
         git push --tags
     - name: Release
       env:
