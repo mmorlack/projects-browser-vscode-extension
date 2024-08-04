@@ -54,13 +54,13 @@ jobs:
       if: success() && matrix.os == 'ubuntu-latest'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG_VERSION: ${{ env.version }}
       run: |
         git merge $TAG_VERSION
         git push --tags
     - name: Release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        TAG_VERSION: ${{ env.version }}
       uses: softprops/action-gh-release@v2
       if: success() && matrix.os == 'ubuntu-latest'
       with:
