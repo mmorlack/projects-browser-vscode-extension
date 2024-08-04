@@ -39,6 +39,7 @@ jobs:
         git config user.email "actions@github.com"
         npm run package ${RELEASE_TYPE}
         echo "packageFile=$(ls *.vsix)" >> $GITHUB_ENV
+        echo "version=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_ENV
       env:
         RELEASE_TYPE:  ${{ inputs.releaseType }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -49,17 +50,21 @@ jobs:
       env:
         VSCE_PAT: ${{ secrets.VSCE_PAT }}
         VSIX_PATH: ${{ env.packageFile }}
-    - name: Push tag
+    - name: Push tag and backmerge
       if: success() && matrix.os == 'ubuntu-latest'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        git chekout master
+        git merge $TAG_VERSION
         git push --tags
     - name: Release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG_VERSION: ${{ env.version }}
       uses: softprops/action-gh-release@v2
       if: success() && matrix.os == 'ubuntu-latest'
       with:
         files: |
           ${{ env.packageFile }}
+        tag_name: ${{ env.version }}
