@@ -35,14 +35,18 @@ jobs:
     - name: Package
       if: success() && matrix.os == 'ubuntu-latest'
       run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
         npm run package ${RELEASE_TYPE}
         echo "packageFile=$(ls *.vsix)" >> $GITHUB_ENV
+        echo "version=$(git describe --tags $(git rev-list --tags --max-count=1))" >> $GITHUB_ENV
       env:
         RELEASE_TYPE:  ${{ inputs.releaseType }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Publish
       if: success() && matrix.os == 'ubuntu-latest'
       run: |
-        npm run publish -i ${VSIX_PATH}
+        npm run publish -- -i ${VSIX_PATH}
       env:
         VSCE_PAT: ${{ secrets.VSCE_PAT }}
         VSIX_PATH: ${{ env.packageFile }}
@@ -50,9 +54,9 @@ jobs:
       if: success() && matrix.os == 'ubuntu-latest'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        TAG_VERSION: ${{ env.version }}
       run: |
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
+        git push
         git push --tags
     - name: Release
       env:
@@ -62,3 +66,4 @@ jobs:
       with:
         files: |
           ${{ env.packageFile }}
+        tag_name: ${{ env.version }}
