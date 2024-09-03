@@ -35,22 +35,21 @@ Projects folders need to be configured via `settings.json` and have the followin
 
 ```json
 {
-    "projectsBrowser.rootFolders": [
+  "projectsBrowser.rootFolders": [
+    {
+      "rootFolder": "path/to/projects/root",
+      "recurseAfterFirstHit": false,
+      "maxDepth": 1,
+      "projectsType": "git|vscode|idea",
+      "customIcons": [
         {
-            "rootFolder": "path/to/projects/root",
-            "recurseAfterFirstHit": false,
-            "maxDepth": 1,
-            "projectsType": "git|vscode|idea",
-            "customIcons": [
-                {
-                    "matcher": "regex to match, applys to full path",
-                    "icon": "icon codicon name or path to custom icon",
-                    "applysTo": "folder|project"
-                }
-            ]
-
+          "matcher": "regex to match, applys to full path",
+          "icon": "icon codicon name or path to custom icon",
+          "applysTo": "folder|project"
         }
-    ]
+      ]
+    }
+  ]
 }
 ```
 

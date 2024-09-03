@@ -10,17 +10,17 @@ jobs:
         os: [macos-latest, ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-    - name: Install Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18.x
-    - name: Install deps
-      run: npm ci
-    - name: Run Tests
-      run: xvfb-run -a npm test
-      if: runner.os == 'Linux'
-    - name: Run Tests
-      run: npm test
-      if: runner.os != 'Linux'
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18.x
+      - name: Install deps
+        run: npm ci
+      - name: Run Tests
+        run: xvfb-run -a npm test
+        if: runner.os == 'Linux'
+      - name: Run Tests
+        run: npm test
+        if: runner.os != 'Linux'

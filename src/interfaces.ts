@@ -1,21 +1,20 @@
-
 export interface ProjectsPropertiesConfig {
-    maxDepth?: number; 
-    customIcons?: CustomIcons[]; 
-    recurseAfterFirstHit?: boolean 
-    projectsType?: string
-    ignore?: string[]
-  }
-  
+  maxDepth?: number;
+  customIcons?: CustomIcons[];
+  recurseAfterFirstHit?: boolean;
+  projectsType?: string;
+  ignore?: string[];
+}
+
 export interface CustomIcons {
-    matcher: string;
-    icon: string;
-    applysTo: string;
-  }
-  
+  matcher: string;
+  icon: string;
+  applysTo: string;
+}
+
 export interface ProjectsConfig extends ProjectsPropertiesConfig {
-    rootFolder: string;
-  }
+  rootFolder: string;
+}
 
 export interface ProjectTreeItemObject {
   label: string;
@@ -24,5 +23,5 @@ export interface ProjectTreeItemObject {
   icon: {
     path: string;
     isCodicon: boolean;
-  }
+  };
 }
