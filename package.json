@@ -78,12 +78,12 @@
                 ]
               },
               "ignore": {
-                  "type": "array",
-                  "default": [],
-                  "items": {
-                    "type": "string",
-                    "description": "Matcher to exclude specific folders from path"
-                  }
+                "type": "array",
+                "default": [],
+                "items": {
+                  "type": "string",
+                  "description": "Matcher to exclude specific folders from path"
+                }
               },
               "customIcons": {
                 "type": "array",
@@ -250,6 +250,7 @@
     "@vscode/test-electron": "^2.3.9",
     "@vscode/vsce": "^2.31.1",
     "eslint": "^8.56.0",
+    "prettier": "3.3.3",
     "typescript": "^5.3.3"
   }
 }
