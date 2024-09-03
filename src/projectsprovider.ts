@@ -1,12 +1,12 @@
 import * as vscode from "vscode";
 import * as fs from "fs";
-import * as PATH from "path";
-import { ProjectsConfig, ProjectsPropertiesConfig } from "./interfaces";
+import { ProjectsConfig } from "./interfaces";
 import { ProjectTreeItem } from "./common";
-import { isProjectFactory, pruneTree, readDirData } from "./utils";
+import { pruneTree, readDirData } from "./utils";
 
 export class ProjectsDataProvider implements vscode.TreeDataProvider<ProjectTreeItem> {
-    private treeData: ProjectTreeItem[];
+    public treeData: ProjectTreeItem[] = [];
+    public projectsData: ProjectTreeItem[] = [];
   
     constructor() {
       this.treeData = this.getTreeData();
@@ -30,14 +30,18 @@ export class ProjectsDataProvider implements vscode.TreeDataProvider<ProjectTree
     }
   
     getTreeData(): ProjectTreeItem[] {
-      let projectsRoots = vscode.workspace.getConfiguration("projectsBrowser").get("rootFolders") as ProjectsConfig[];
+      let configs = vscode.workspace.getConfiguration("projectsBrowser");
+      let projectsRoots: ProjectsConfig[] = configs.get("rootFolders") || [];
+      let globalIgnore: string[] = configs.get("globalIgnore") || [];
       let projects = [];
       for (var projectConfig of projectsRoots) {
         const {rootFolder, ...configs} = projectConfig;
+        configs.ignore = (configs.ignore || []).concat(globalIgnore);
         console.log(`Retrieving data from folder ${rootFolder}`);
         if (fs.existsSync(rootFolder)) {
           let projectList: ProjectTreeItem[] = [];
           let nodeTree = readDirData(rootFolder, 0, projectList, configs);
+          this.projectsData.push(...projectList);
           let prunedNodeTree = pruneTree(
             nodeTree,
             projectList.map((r) => r.label)

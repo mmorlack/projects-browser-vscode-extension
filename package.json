@@ -36,6 +36,16 @@
           "type": "boolean",
           "default": true
         },
+        "projectsBrowser.globalIgnore": {
+          "type": "array",
+          "default": [
+            "node_modules"
+          ],
+          "items": {
+            "type": "string",
+            "description": "Matcher to exclude specific folders from path, applied to each project in the configuration"
+          }
+        },
         "projectsBrowser.rootFolders": {
           "type": "array",
           "default": [],
@@ -66,6 +76,14 @@
                   "vscode",
                   "idea"
                 ]
+              },
+              "ignore": {
+                  "type": "array",
+                  "default": [],
+                  "items": {
+                    "type": "string",
+                    "description": "Matcher to exclude specific folders from path"
+                  }
               },
               "customIcons": {
                 "type": "array",
@@ -131,6 +149,16 @@
         "command": "projectsBrowser.filter",
         "title": "Filter projects",
         "icon": "$(search)"
+      },
+      {
+        "command": "projectsBrowser.openSettings",
+        "title": "Open settings",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "projectsBrowser.collapseAll",
+        "title": "Collapse all items",
+        "icon": "$(collapse-all)"
       }
     ],
     "viewsContainers": {
@@ -175,14 +203,24 @@
       ],
       "view/title": [
         {
-          "command": "projectsBrowser.refresh",
-          "when": "view == projectsBrowser",
-          "group": "navigation"
-        },
-        {
           "command": "projectsBrowser.filter",
           "when": "view == projectsBrowser",
-          "group": "navigation"
+          "group": "navigation@1"
+        },
+        {
+          "command": "projectsBrowser.refresh",
+          "when": "view == projectsBrowser",
+          "group": "navigation@2"
+        },
+        {
+          "command": "projectsBrowser.collapseAll",
+          "when": "view == projectsBrowser",
+          "group": "navigation@3"
+        },
+        {
+          "command": "projectsBrowser.openSettings",
+          "when": "view == projectsBrowser",
+          "group": "navigation@4"
         },
         {
           "command": "projectsBrowser.clearFavorites",

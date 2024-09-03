@@ -3,6 +3,7 @@ import { ProjectsDataProvider } from "./projectsprovider";
 import { ProjectsFavoritesDataProvider } from "./projectsfavoritesprovider";
 import { ProjectTreeItem } from "./common";
 import { openProject } from "./utils";
+import { TreeItemCollapsibleState } from "vscode";
 
 export const PROJECT_FAVTORITES_KEY = 'projectsBrowser.favMap';
 
@@ -67,10 +68,30 @@ export function activate(context: vscode.ExtensionContext) {
     projectsFavoritesDataProvider.refresh(context);
   });
 
-  vscode.commands.registerCommand("projectsBrowser.refresh", () => projectsDataProvider.refresh());
+  vscode.commands.registerCommand("projectsBrowser.refresh", () => {
+    projectsDataProvider.refresh();
+    var favMap: Map<string, object> = retrieveMap(context, PROJECT_FAVTORITES_KEY);
+    projectsDataProvider.projectsData.forEach(
+      proj => {
+          if (favMap.has(proj.label)) {
+            favMap.set(proj.label, proj.toObject());
+        }
+      }
+    );
+    storeMap(context, PROJECT_FAVTORITES_KEY, favMap);
+    projectsFavoritesDataProvider.refresh(context);
+  });
 
   vscode.commands.registerCommand("projectsBrowser.filter", async () => {
     await vscode.commands.executeCommand("list.find");
+  });
+
+  vscode.commands.registerCommand("projectsBrowser.openSettings", async () => {
+    await vscode.commands.executeCommand('workbench.action.openSettings', '@ext:matteo-morlack.projects-browser');
+  });
+
+  vscode.commands.registerCommand("projectsBrowser.collapseAll", async () => {
+    await vscode.commands.executeCommand('workbench.actions.treeView.projectsBrowser.collapseAll');
   });
 }
 

@@ -31,7 +31,10 @@ export function readDirData(
     projectList: ProjectTreeItem[],
     configs: ProjectsPropertiesConfig
   ): ProjectTreeItem {
-    let dirData = safeReadDirSync(path);
+    let dirData = safeReadDirSync(path).filter(
+      (p) => 
+        !configs.ignore?.some((matcher) => RegExp(matcher).test(PATH.join(p.path, p.name)))
+    );
     let isProject = isProjectFactory(configs.projectsType || 'git')(dirData, configs);
     let iconPath = getIcon(path,  configs.customIcons || [], isProject);
     let item = new ProjectTreeItem(PATH.basename(path), path, isProject, iconPath);
@@ -91,7 +94,6 @@ export function getIcon(path: string, iconConfigs: CustomIcons[], isProject: boo
               return _getIcon(iconConfig.icon);
       }
   }
-  //const extSettings = vscode.workspace.getConfiguration("projectsBrowser");
   return isProject ?
       _getIcon(configs.get('defaultProjectIcon', 'git-branch')) :
       _getIcon(configs.get('defaultFolderIcon', 'folder'));

@@ -4,6 +4,7 @@ export interface ProjectsPropertiesConfig {
     customIcons?: CustomIcons[]; 
     recurseAfterFirstHit?: boolean 
     projectsType?: string
+    ignore?: string[]
   }
   
 export interface CustomIcons {
