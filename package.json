@@ -236,9 +236,11 @@
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src --ext ts",
+    "lint:prettier": "npx prettier . --write",
     "test": "vscode-test",
     "package": "vsce package",
-    "publish": "vsce publish"
+    "publish": "vsce publish",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.6",
@@ -250,7 +252,12 @@
     "@vscode/test-electron": "^2.3.9",
     "@vscode/vsce": "^2.31.1",
     "eslint": "^8.56.0",
+    "husky": "^9.1.5",
+    "lint-staged": "^15.2.10",
     "prettier": "3.3.3",
     "typescript": "^5.3.3"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   }
 }
