@@ -21,7 +21,6 @@ export function isProjectFactory(projectType: string) {
         dirData.find((c) => c.name === '.idea') !== undefined;
     default:
       throw new Error(`Unknown project type: ${projectType}`);
-      console.log('test');
   }
 }
 
